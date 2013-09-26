@@ -3,6 +3,7 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'findbugs'
 apply plugin: 'application'
+apply plugin: 'groovy'
 
 mainClassName = "it.unipd.dei.webqual.converter.Main"
 
@@ -12,6 +13,7 @@ repositories {
 
 dependencies {
   compile "it.unimi.dsi:webgraph-big:3.2.0"
+  testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
 }
 
 findbugs {
