@@ -25,6 +25,7 @@ public class Main {
 
 
     ProgressLogger pl = new ProgressLogger();
+
     String efOut = outBasename + "-ef";
     System.out.println(
       "==== Converting the graph to Elias-Fano format: output " + efOut);

@@ -73,7 +73,12 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
   }
 
   protected long resetMap(long id) {
-    return map.get(reset(id));
+    Long l = map.get(reset(id));
+    if (l == null) {
+      return -1;
+    } else {
+      return l;
+    }
   }
 
   @Override
@@ -132,7 +137,10 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
                 nextId = resetMap(neigh);
                 break;
               } else {
-                LongBigArrays.set(successors, outdegree++, resetMap(neigh));
+                long mapped = resetMap(neigh);
+                if(mapped >= 0) {
+                  LongBigArrays.set(successors, outdegree++, mapped);
+                }
               }
             }
 
