@@ -21,7 +21,7 @@ public class Main {
     System.out.println("==== Loading graph from " + inputFile);
     ImmutableGraph iag64 =
       ImmutableAdjacencyGraph64.loadOffline(inputFile);
-    System.out.println("Loaded graph with " + iag64.numNodes());
+    System.out.println("Loaded graph with " + iag64.numNodes() + " nodes");
 
 
     ProgressLogger pl = new ProgressLogger();
