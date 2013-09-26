@@ -10,15 +10,16 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
 
   public static final int ID_LEN = 8;
 
-  public static final long HEAD_LASK_L = 1L << 63;
+  public static final long HEAD_MASK_L = 1L << 63;
 
-  public static final long RESET_MASK = ~HEAD_LASK_L;
+  public static final long RESET_MASK = ~HEAD_MASK_L;
 
   public static final byte HEAD_MASK = (byte) (1 << 7);
 
@@ -50,7 +51,7 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
     }
 
     dis.close();
-    if(read != 0) {
+    if(read != -1) { // -1 means stream exhausted
       throw new IllegalStateException("The last ID was not of " + ID_LEN + " bytes");
     }
     return cnt;
@@ -61,7 +62,7 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
   }
 
   protected boolean isHead(long id) {
-    return (id & HEAD_LASK_L) == HEAD_LASK_L;
+    return (id & HEAD_MASK_L) == HEAD_MASK_L;
   }
 
   protected long reset(long id) {
@@ -106,31 +107,39 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
         long[][] successors = LongBigArrays.EMPTY_BIG_ARRAY;
         long nextId = reset(dis.readLong());
 
+        {
+          System.out.println("first: "+nextId);
+        }
+
         @Override
         public long nextLong() {
           if(!hasNext()) throw new NoSuchElementException();
           successors = LongBigArrays.ensureCapacity(successors, 10); // magic number! tweak for efficiency
           outdegree = 0;
+          long currentId = nextId;
+
           try {
-
             // now read the adjacency
-            long neigh = dis.readLong();
-            while((dis.available() > 0) && !isHead(neigh)) {
-              LongBigArrays.set(successors, outdegree++, reset(neigh));
+            long neigh = -1;
+            while(dis.available() > 0) {
               neigh = dis.readLong();
-            }
-            // now assign the next long if we are on a head
-            if(isHead(neigh)) {
-              nextId = reset(neigh);
+              // assign the next long if we are on a head
+              if(isHead(neigh)) {
+                nextId = reset(neigh);
+                System.out.println("next id: " + nextId);
+                break;
+              } else {
+                LongBigArrays.set(successors, outdegree++, reset(neigh));
+              }
             }
 
-            LongBigArrays.trim(successors, outdegree);
+            successors = LongBigArrays.trim(successors, outdegree);
 
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
 
-          return nextId;
+          return currentId;
         }
 
         @Override
