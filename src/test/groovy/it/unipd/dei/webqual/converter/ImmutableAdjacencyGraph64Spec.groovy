@@ -82,4 +82,35 @@ class ImmutableAdjacencyGraph64Spec extends Specification {
 
   }
 
+  def "test conversion: shuffled nodes non adjacent" () {
+    setup:
+    def filename = "/tmp/immutable-graph-test"
+    // create graph
+    def graph = [ [0L, 2L, 3L]
+                , [3L, 0L, 2L]
+                , [2L, 0L, 3L]]
+    writeGraph(graph, filename)
+    def ig = ImmutableAdjacencyGraph64.loadOffline(filename)
+    EFGraph.store(ig, filename+"-ef")
+    def efg = EFGraph.load(filename+"-ef")
+    BVGraph.store(efg,filename+"-bv")
+    def bvg = BVGraph.load(filename+"-bv")
+
+    def nit = ig.nodeIterator()
+    while(nit.hasNext()) {
+      print(nit.nextLong())
+      println("  -  "+LongBigArrays.toString(nit.successorBigArray()))
+    }
+
+    expect:
+    efg.numNodes() == 3
+    efg.numArcs() == 6
+    efg.outdegree(0) == 2
+
+    bvg.numNodes() == 3
+    bvg.numArcs() == 6
+    bvg.outdegree(0) == 2
+
+  }
+
 }
