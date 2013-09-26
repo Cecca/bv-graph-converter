@@ -1,6 +1,7 @@
 package it.unipd.dei.webqual.converter
 
 import it.unimi.dsi.big.webgraph.BVGraph
+import it.unimi.dsi.big.webgraph.EFGraph
 import it.unimi.dsi.fastutil.longs.LongBigArrays
 import spock.lang.Specification
 
@@ -28,13 +29,13 @@ class ImmutableAdjacencyGraph64Spec extends Specification {
     def filename = "/tmp/immutable-graph-test"
     // create graph
     def graph = [ [0L, 1L, 2L, 3L]
-                , [2L, 0L, 3L]
                 , [1L, 0L]
+                , [2L, 0L, 3L]
                 , [3L, 0L, 2L]]
     writeGraph(graph, filename)
     def ig = ImmutableAdjacencyGraph64.loadOffline(filename)
-//    BVGraph.store(ig, filename+"-bv")
-//    def bvg = BVGraph.load(filename+"-bv")
+    BVGraph.store(ig, filename+"-bv")
+    def bvg = BVGraph.load(filename+"-bv")
 
     def nit = ig.nodeIterator()
     while(nit.hasNext()) {
@@ -43,7 +44,41 @@ class ImmutableAdjacencyGraph64Spec extends Specification {
     }
 
     expect:
-    true
+    bvg.numNodes() == 4
+    bvg.numArcs() == 8
+    bvg.outdegree(0) == 3
+
+  }
+
+  def "test conversion: shuffled nodes" () {
+    setup:
+    def filename = "/tmp/immutable-graph-test"
+    // create graph
+    def graph = [ [0L, 1L, 2L, 3L]
+            , [2L, 0L, 3L]
+            , [1L, 0L]
+            , [3L, 0L, 2L]]
+    writeGraph(graph, filename)
+    def ig = ImmutableAdjacencyGraph64.loadOffline(filename)
+    EFGraph.store(ig, filename+"-ef")
+    def efg = EFGraph.load(filename+"-ef")
+    BVGraph.store(efg,filename+"-bv")
+    def bvg = BVGraph.load(filename+"-bv")
+
+    def nit = ig.nodeIterator()
+    while(nit.hasNext()) {
+      print(nit.nextLong())
+      println("  -  "+LongBigArrays.toString(nit.successorBigArray()))
+    }
+
+    expect:
+    efg.numNodes() == 4
+    efg.numArcs() == 8
+    efg.outdegree(0) == 3
+
+    bvg.numNodes() == 4
+    bvg.numArcs() == 8
+    bvg.outdegree(0) == 3
 
   }
 

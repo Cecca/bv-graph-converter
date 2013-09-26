@@ -107,10 +107,6 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
         long[][] successors = LongBigArrays.EMPTY_BIG_ARRAY;
         long nextId = reset(dis.readLong());
 
-        {
-          System.out.println("first: "+nextId);
-        }
-
         @Override
         public long nextLong() {
           if(!hasNext()) throw new NoSuchElementException();
@@ -126,7 +122,6 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
               // assign the next long if we are on a head
               if(isHead(neigh)) {
                 nextId = reset(neigh);
-                System.out.println("next id: " + nextId);
                 break;
               } else {
                 LongBigArrays.set(successors, outdegree++, reset(neigh));
