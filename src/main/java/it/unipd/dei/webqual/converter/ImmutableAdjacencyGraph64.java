@@ -7,8 +7,8 @@ import it.unimi.dsi.fastutil.longs.LongBigArrays;
 import it.unimi.dsi.logging.ProgressLogger;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
+import java.math.BigInteger;
+import java.util.*;
 
 public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
 
@@ -24,8 +24,11 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
 
   private final long numNodes;
 
+  private final Map<Long, Long> map;
+
   private ImmutableAdjacencyGraph64( final CharSequence filename ) throws IOException {
     this.filename = filename.toString();
+    this.map = new HashMap<>(300); // magic number!! initial capacity
     this.numNodes = countNodes();
   }
 
@@ -41,6 +44,8 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
       read = dis.read(buf);
       if(read == ID_LEN){
         if(isHead(buf)) {
+          long id = reset(new BigInteger(buf).longValue());
+          map.put(id, cnt);
           cnt++;
         }
       } else {
@@ -65,6 +70,10 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
 
   protected long reset(long id) {
     return id & RESET_MASK;
+  }
+
+  protected long resetMap(long id) {
+    return map.get(reset(id));
   }
 
   @Override
@@ -104,7 +113,7 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
           new BufferedInputStream(new FileInputStream(filename)));
         long outdegree;
         long[][] successors = LongBigArrays.EMPTY_BIG_ARRAY;
-        long nextId = reset(dis.readLong());
+        long nextId = resetMap(dis.readLong());
 
         @Override
         public long nextLong() {
@@ -120,10 +129,10 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
               neigh = dis.readLong();
               // assign the next long if we are on a head
               if(isHead(neigh)) {
-                nextId = reset(neigh);
+                nextId = resetMap(neigh);
                 break;
               } else {
-                LongBigArrays.set(successors, outdegree++, reset(neigh));
+                LongBigArrays.set(successors, outdegree++, resetMap(neigh));
               }
             }
 
