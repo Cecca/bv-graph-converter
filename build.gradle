@@ -1,0 +1,33 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'findbugs'
+apply plugin: 'application'
+
+mainClassName = "it.unipd.dei.webqual.converter.Main"
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile "it.unimi.dsi:webgraph-big:3.2.0"
+}
+
+findbugs {
+  ignoreFailures = true
+  reportLevel = 'low'
+  effort = 'max'
+}
+
+tasks.withType(FindBugs) {
+  reports {
+      xml.enabled = false
+      html.enabled = true
+  }
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '1.7'
+}
+
