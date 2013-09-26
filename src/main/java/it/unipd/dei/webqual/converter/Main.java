@@ -21,18 +21,19 @@ public class Main {
     System.out.println("==== Loading graph from " + inputFile);
     ImmutableGraph iag64 =
       ImmutableAdjacencyGraph64.loadOffline(inputFile);
+    System.out.println("Loaded graph with " + iag64.numNodes());
 
 
     ProgressLogger pl = new ProgressLogger();
     String efOut = outBasename + "-ef";
     System.out.println(
-      "==== Converting the graph to Elias-Fano format: output" + efOut);
+      "==== Converting the graph to Elias-Fano format: output " + efOut);
     EFGraph.store(iag64, efOut, pl);
 
     pl = new ProgressLogger();
     String bvOut = outBasename + "-bv";
     System.out.println(
-      "==== Converting the graph to Boldi-Vigna format: output" + bvOut);
+      "==== Converting the graph to Boldi-Vigna format: output " + bvOut);
     ImmutableGraph efGraph = EFGraph.load(efOut);
     BVGraph.store(efGraph, bvOut, pl);
 
