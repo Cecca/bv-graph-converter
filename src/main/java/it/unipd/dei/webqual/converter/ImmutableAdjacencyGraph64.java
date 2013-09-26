@@ -6,10 +6,7 @@ import it.unimi.dsi.big.webgraph.NodeIterator;
 import it.unimi.dsi.fastutil.longs.LongBigArrays;
 import it.unimi.dsi.logging.ProgressLogger;
 
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
@@ -33,7 +30,8 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
   }
 
   protected long countNodes() throws IOException {
-    DataInputStream dis = new DataInputStream(new FileInputStream(this.filename));
+    DataInputStream dis = new DataInputStream(
+      new BufferedInputStream(new FileInputStream(this.filename)));
 
     long cnt = 0;
     int read;
@@ -102,7 +100,8 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
     try {
       return new NodeIterator() {
 
-        final DataInputStream dis = new DataInputStream(new FileInputStream(filename));
+        final DataInputStream dis = new DataInputStream(
+          new BufferedInputStream(new FileInputStream(filename)));
         long outdegree;
         long[][] successors = LongBigArrays.EMPTY_BIG_ARRAY;
         long nextId = reset(dis.readLong());
