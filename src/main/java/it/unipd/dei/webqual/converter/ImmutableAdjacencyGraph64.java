@@ -10,20 +10,39 @@ import java.io.*;
 import java.math.BigInteger;
 import java.util.*;
 
+/**
+ * Reads files serialized as immutable graphs.
+ *
+ * The format of the serialized graph is the following
+ *
+ *     |head| |adjacency list|
+ *
+ * Each ID is 64 bits long. To distinguish between the head of an adjacency list
+ * and the actual list we use the first bit. If the most significant bit is set to
+ * `1`, then the current ID is the head of an adjacency list, otherwise is
+ * an element of the adjacency list.
+ */
 public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
 
+  /** Length in bytes of the IDs */
   public static final int ID_LEN = 8;
 
+  /** `long` mask with the first bit set */
   public static final long HEAD_MASK_L = 1L << 63;
 
+  /** `long` mask with all the bits other than the most significant set. */
   public static final long RESET_MASK = ~HEAD_MASK_L;
 
+  /** `byte` mask with the most significant bit set. */
   public static final byte HEAD_MASK = (byte) (1 << 7);
 
+  /** The name of the file storing the graph. */
   private final String filename;
 
+  /** The number of nodes of the graph. */
   private final long numNodes;
 
+  /** A map between the original IDs of the graph and IDs in the range `[0, numNodes]` */
   private final Map<Long, Long> map;
 
   private ImmutableAdjacencyGraph64( final CharSequence filename ) throws IOException {
