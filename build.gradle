@@ -31,3 +31,10 @@ task wrapper(type: Wrapper) {
   gradleVersion = '1.7'
 }
 
+idea {
+  module {
+    downloadSources = true
+  }
+}
+
+
