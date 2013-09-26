@@ -36,6 +36,10 @@ public class Main {
     ImmutableGraph efGraph = EFGraph.load(efOut);
     BVGraph.store(efGraph, bvOut, pl);
 
+    System.out.println("==== Statistics ====");
+    System.out.println("Number of nodes: " + efGraph.numNodes());
+    System.out.println("Number of arcs: " + efGraph.numArcs());
+
   }
 
 }
