@@ -107,7 +107,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
   public static void main(String[] args) throws IOException {
     AdjacencyHeadIterator it = new AdjacencyHeadIterator(
-      "links.0", 16, false);
+      args[0], 16, false);
 
     Map<BigInteger, Collection<BigInteger>> heads = new HashMap<>();
     long duplicates = 0;
