@@ -6,10 +6,12 @@ public class Utils {
   public static final long HEAD_MASK_L = 1L << 63;
 
   /** `long` mask with all the bits other than the most significant set. */
-  public static final long RESET_MASK = ~HEAD_MASK_L;
+  public static final long RESET_MASK_L = ~HEAD_MASK_L;
 
   /** `byte` mask with the most significant bit set. */
   public static final byte HEAD_MASK = (byte) (1 << 7);
+
+  public static final byte RESET_MASK = (byte) ~HEAD_MASK;
 
   /**
    * Creates a `long` from the first 8 bytes of the 16 bytes ID.
@@ -42,7 +44,14 @@ public class Utils {
   }
 
   protected static long reset(long id) {
-    return id & RESET_MASK;
+    return id & RESET_MASK_L;
+  }
+
+  public static byte[] reset(byte[] id) {
+    id[0] = (byte) (id[0] & RESET_MASK);
+    byte[] res = new byte[id.length];
+    System.arraycopy(id, 0, res, 0, id.length);
+    return res;
   }
 
 }

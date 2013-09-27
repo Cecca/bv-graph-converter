@@ -2,6 +2,9 @@ package it.unipd.dei.webqual.converter;
 
 import java.io.*;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+import static it.unipd.dei.webqual.converter.Utils.*;
 
 public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
@@ -12,26 +15,84 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
   private boolean hasNext;
   private byte[] next;
 
+  private int count;
 
-  public AdjacencyHeadIterator(String fileName, int idLen) throws FileNotFoundException {
+  public AdjacencyHeadIterator(String fileName, int idLen) throws IOException {
     this.fileName = fileName;
     this.idLen = idLen;
     this.dis = new DataInputStream(
       new BufferedInputStream(new FileInputStream(this.fileName)));
+
+    this.hasNext = true;
+    byte[] firstNode = new byte[idLen];
+    int read = dis.read(firstNode);
+    if (read != idLen || !isHead(firstNode)) {
+      throw new NoSuchElementException(
+        "The first id is not the head of an adjacency list");
+    }
+    this.next = reset(firstNode);
+
+    this.count = 1;
   }
 
   @Override
   public boolean hasNext() {
-    throw new UnsupportedOperationException();
+    return hasNext;
   }
 
   @Override
   public byte[] next() {
-    throw new UnsupportedOperationException();
+    final byte[] cur = next;
+    // advance to the next head
+    try {
+      hasNext = false;
+      while (dis.available() > 0) {
+        byte[] buf = new byte[idLen];
+        dis.read(buf);
+        if(isHead(buf)) {
+          count++;
+          next = reset(buf);
+          hasNext = true;
+          break;
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return cur;
   }
 
   @Override
   public void remove() {
     throw new UnsupportedOperationException();
   }
+
+  public int getCount() {
+    return count;
+  }
+
+  @Override
+  protected void finalize() throws Throwable {
+    try {
+      dis.close();
+    }
+    finally {
+      super.finalize();
+    }
+  }
+
+  public static void main(String[] args) throws IOException {
+    AdjacencyHeadIterator it = new AdjacencyHeadIterator(
+      "links.0", 16);
+
+    int cnt = 0;
+
+    while(it.hasNext()) {
+      it.next();
+      cnt++;
+    }
+
+    System.out.printf("Counted: %d\nComputed: %d", cnt, it.getCount());
+  }
+
 }
