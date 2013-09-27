@@ -47,6 +47,7 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
       new BufferedInputStream(new FileInputStream(this.filename)));
 
     int cnt = 0;
+    int collisions = 0;
 
     int read;
     byte[] buf = new byte[ID_LEN];
@@ -56,6 +57,11 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
       if(read == ID_LEN){
         if(isHead(buf)) {
           long id = reset(getLong(buf));
+          Integer alreadyPresent = map.get(id);
+          if (alreadyPresent != null) {
+            collisions++;
+            System.out.println("Collision on id: " + id + " => " + map.get(id));
+          }
           map.put(id, cnt);
           cnt++;
           if(cnt % 1000 == 0) {
@@ -67,7 +73,8 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
       }
     }
 
-    System.out.println();
+    System.out.printf("Collisions %d/%d : %f\n",
+      collisions, cnt, (((double) collisions) / cnt));
     dis.close();
     if(read != -1) { // -1 means stream exhausted
       throw new IllegalStateException("The last ID was not of " + ID_LEN + " bytes");
