@@ -111,7 +111,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
     Map<BigInteger, Collection<BigInteger>> heads = new HashMap<>();
     long duplicates = 0;
-    long nonEmptyDuplicates = 0;
+    long diffNeighsDuplicates = 0;
 
     while(it.hasNext()) {
       byte[] head = it.next();
@@ -127,8 +127,8 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 //        System.out.printf("Duplicate element: %s\n\tneighbours a: %s\n\tneighbours b: %s\n",
 //          bi.toString(16), contained.toString(), it.neighbours());
         duplicates++;
-        if(it.neighbours().size() != 0) {
-          nonEmptyDuplicates++;
+        if(it.neighbours().equals(contained)) {
+          diffNeighsDuplicates++;
         }
       } else {
         heads.put(bi, it.neighbours());
@@ -138,11 +138,11 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
     System.out.printf("%s   %f   %f\n",
       args[0],
       (((double) duplicates) / it.getCount()) * 100,
-      (((double) nonEmptyDuplicates) / duplicates) * 100);
+      (((double) diffNeighsDuplicates) / duplicates) * 100);
 //System.out.printf("Duplicates: %d / %d   -   %f %%\n",
 //      duplicates, it.getCount(), (((double) duplicates) / it.getCount()) * 100);
 //    System.out.printf("Of which non empty: %d / %d  -  %f %%\n",
-//      nonEmptyDuplicates, duplicates, (((double) nonEmptyDuplicates) / duplicates) * 100);
+//      diffNeighsDuplicates, duplicates, (((double) diffNeighsDuplicates) / duplicates) * 100);
 
   }
 
