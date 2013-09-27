@@ -79,7 +79,7 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
           }
           cnt++;
           if(cnt % 1000 == 0) {
-            System.out.printf("%d\r", cnt);
+            System.out.printf("%d - %d bytes left\r", cnt, dis.available());
           }
         }
       } else {
