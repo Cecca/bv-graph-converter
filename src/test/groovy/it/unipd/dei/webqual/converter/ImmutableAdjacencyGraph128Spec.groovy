@@ -36,7 +36,7 @@ class ImmutableAdjacencyGraph128Spec extends Specification {
 
     where:
     buf                 || expected
-    [0,0,0,0]           || false
+    [0,0,0,0]           || false|
     [0xff,0,0,0]        || true
   }
 

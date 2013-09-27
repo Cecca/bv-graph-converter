@@ -159,6 +159,10 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
         {
           byte[] firstId = new byte[ID_LEN];
           dis.read(firstId);
+          if(!isHead(firstId)) {
+            throw new NoSuchElementException(
+              "The first element of the file is not a head");
+          }
           nextId = resetMap(getLong(firstId));
         }
 
