@@ -3,12 +3,14 @@ package it.unipd.dei.webqual.converter;
 import it.unimi.dsi.big.webgraph.ImmutableGraph;
 import it.unimi.dsi.big.webgraph.ImmutableSequentialGraph;
 import it.unimi.dsi.big.webgraph.NodeIterator;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongBigArrays;
 import it.unimi.dsi.logging.ProgressLogger;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Reads files serialized as immutable graphs.
@@ -43,11 +45,11 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
   private final long numNodes;
 
   /** A map between the original IDs of the graph and IDs in the range `[0, numNodes]` */
-  private final Map<Long, Long> map;
+  private final Map<Long, Integer> map;
 
   private ImmutableAdjacencyGraph64( final CharSequence filename ) throws IOException {
     this.filename = filename.toString();
-    this.map = new HashMap<>(300); // magic number!! initial capacity
+    this.map = new Long2IntOpenHashMap();
     this.numNodes = countNodes();
   }
 
@@ -55,7 +57,10 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
     DataInputStream dis = new DataInputStream(
       new BufferedInputStream(new FileInputStream(this.filename)));
 
-    long cnt = 0;
+    // This is an integer, since we don't deal (for now) with graphs with more
+    // than 2^31 nodes
+    int cnt = 0;
+
     int read;
     byte[] buf = new byte[ID_LEN];
 
@@ -92,7 +97,7 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
   }
 
   protected long resetMap(long id) {
-    Long l = map.get(reset(id));
+    Integer l = map.get(reset(id));
     if (l == null) {
       return -1;
     } else {
