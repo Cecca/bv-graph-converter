@@ -129,7 +129,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
         Collections.sort(contained);
         Collections.sort(it.neighbours());
-        
+
         if(it.neighbours().equals(contained)) {
           diffNeighsDuplicates++;
         }
@@ -138,8 +138,9 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
       }
     }
 
-    System.out.printf("%s   %f   %f\n",
+    System.out.printf("%s  %d   %f   %f\n",
       args[0],
+      it.getCount(),
       (((double) duplicates) / it.getCount()) * 100,
       (((double) diffNeighsDuplicates) / duplicates) * 100);
 
