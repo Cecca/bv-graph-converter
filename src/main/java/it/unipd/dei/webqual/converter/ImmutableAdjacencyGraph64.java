@@ -44,7 +44,7 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
   /** The number of nodes of the graph. */
   private final long numNodes;
 
-  /** A map between the original IDs of the graph and IDs in the range `[0, numNodes]` */
+  /** A map between the original IDs of the graph and IDs in the range `[0, numNodes-1]` */
   private final Long2IntOpenHashMap map;
 
   private ImmutableAdjacencyGraph64( final CharSequence filename ) throws IOException {
@@ -73,7 +73,7 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
         if(isHead(buf)) {
           long id = reset(new BigInteger(buf).longValue());
           int old = map.put(id, cnt);
-          if (old != defaultReturnValue) {
+          if (old != map.defaultReturnValue()) {
             collisions++;
             System.out.println("Collision on id: " + id + " => " + old);
           }
