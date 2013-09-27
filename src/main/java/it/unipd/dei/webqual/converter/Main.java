@@ -19,9 +19,9 @@ public class Main {
     String outBasename = args[1];
 
     System.out.println("==== Loading graph from " + inputFile);
-    ImmutableGraph iag64 =
-      ImmutableAdjacencyGraph64.loadOffline(inputFile);
-    System.out.println("Loaded graph with " + iag64.numNodes() + " nodes");
+    ImmutableGraph iag128 =
+      ImmutableAdjacencyGraph128.loadOffline(inputFile);
+    System.out.println("Loaded graph with " + iag128.numNodes() + " nodes");
 
 
     ProgressLogger pl = new ProgressLogger();
@@ -29,18 +29,19 @@ public class Main {
     String efOut = outBasename + "-ef";
     System.out.println(
       "==== Converting the graph to Elias-Fano format: output " + efOut);
-    EFGraph.store(iag64, efOut, pl);
+    EFGraph.store(iag128, efOut, pl);
 
     pl = new ProgressLogger();
     String bvOut = outBasename + "-bv";
-    System.out.println(
-      "==== Converting the graph to Boldi-Vigna format: output " + bvOut);
     ImmutableGraph efGraph = EFGraph.load(efOut);
-    BVGraph.store(efGraph, bvOut, pl);
 
     System.out.println("==== Statistics ====");
     System.out.println("Number of nodes: " + efGraph.numNodes());
     System.out.println("Number of arcs: " + efGraph.numArcs());
+
+    System.out.println(
+      "==== Converting the graph to Boldi-Vigna format: output " + bvOut);
+    BVGraph.store(efGraph, bvOut, pl);
 
   }
 

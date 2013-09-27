@@ -38,6 +38,7 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
   private final Map<Long, Long> map;
 
   private ImmutableAdjacencyGraph128( final CharSequence filename ) throws IOException {
+    System.out.println("Creating ImmutableAdjacencyGraph128");
     this.filename = filename.toString();
     this.map = new Long2LongOpenHashMap();
     this.numNodes = countNodes();
