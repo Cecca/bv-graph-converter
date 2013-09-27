@@ -33,18 +33,20 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
   private final long numNodes;
 
   /** A map between the original IDs of the graph and IDs in the range `[0, numNodes]` */
-  private final Map<Long, Integer> map;
+  private final Long2IntOpenHashMap map;
 
   private ImmutableAdjacencyGraph128( final CharSequence filename ) throws IOException {
     System.out.println("Creating ImmutableAdjacencyGraph128");
     this.filename = filename.toString();
     this.map = new Long2IntOpenHashMap();
+    this.map.defaultReturnValue(-1);
     this.numNodes = countNodes();
   }
 
   protected long countNodes() throws IOException {
     DataInputStream dis = new DataInputStream(
       new BufferedInputStream(new FileInputStream(this.filename)));
+    final int defaultReturnValue = map.defaultReturnValue();
 
     int cnt = 0;
     int collisions = 0;
@@ -57,12 +59,11 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
       if(read == ID_LEN){
         if(isHead(buf)) {
           long id = reset(getLong(buf));
-          Integer alreadyPresent = map.get(id);
-          if (alreadyPresent != null) {
+          int old = map.put(id, cnt);
+          if (old != defaultReturnValue) {
             collisions++;
-            System.out.println("Collision on id: " + id + " => " + map.get(id));
+            System.out.println("Collision on id: " + id + " => " + old);
           }
-          map.put(id, cnt);
           cnt++;
           if(cnt % 1000 == 0) {
             System.out.printf("%d - %d bytes left\r", cnt, dis.available());
@@ -116,12 +117,8 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
   }
 
   protected long resetMap(long id) {
-    Integer l = map.get(reset(id));
-    if (l == null) {
-      return -1;
-    } else {
-      return l;
-    }
+    // leverages the defaultReturnValue set to 1
+    return map.get(reset(id));
   }
 
   @Override
