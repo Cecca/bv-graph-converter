@@ -112,10 +112,12 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
     Map<BigInteger, List<BigInteger>> heads = new HashMap<>();
     long duplicates = 0;
     long diffNeighsDuplicates = 0;
+    long edges = 0;
 
     while(it.hasNext()) {
       byte[] head = it.next();
       BigInteger bi = new BigInteger(head);
+      edges += it.neighbours().size();
       if(bi.signum() >= 0) {
         System.out.println("Head with first bit set to 0: " + bi.toString(16));
         System.out.println("The first byte is: " + head[0]);
@@ -138,9 +140,10 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
       }
     }
 
-    System.out.printf("%s  %d   %f   %f\n",
+    System.out.printf("%s  %d  %d  %f   %f\n",
       args[0],
       it.getCount(),
+      edges,
       (((double) duplicates) / it.getCount()) * 100,
       (((double) diffNeighsDuplicates) / duplicates) * 100);
 
