@@ -15,7 +15,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
   private boolean hasNext;
   private byte[] next;
 
-  private int count;
+  private long count;
 
   public AdjacencyHeadIterator(String fileName, int idLen) throws IOException {
     this.fileName = fileName;
@@ -67,7 +67,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
     throw new UnsupportedOperationException();
   }
 
-  public int getCount() {
+  public long getCount() {
     return count;
   }
 
