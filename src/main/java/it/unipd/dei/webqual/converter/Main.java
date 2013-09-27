@@ -19,9 +19,9 @@ public class Main {
     String outBasename = args[1];
 
     System.out.println("==== Loading graph from " + inputFile);
-    ImmutableGraph iag128 =
-      ImmutableAdjacencyGraph128.loadOffline(inputFile);
-    System.out.println("Loaded graph with " + iag128.numNodes() + " nodes");
+    ImmutableGraph iag =
+      ImmutableAdjacencyGraph64.loadOffline(inputFile);
+    System.out.println("Loaded graph with " + iag.numNodes() + " nodes");
 
 
     ProgressLogger pl = new ProgressLogger();
@@ -29,7 +29,7 @@ public class Main {
     String efOut = outBasename + "-ef";
     System.out.println(
       "==== Converting the graph to Elias-Fano format: output " + efOut);
-    EFGraph.store(iag128, efOut, pl);
+    EFGraph.store(iag, efOut, pl);
 
     pl = new ProgressLogger();
     String bvOut = outBasename + "-bv";
