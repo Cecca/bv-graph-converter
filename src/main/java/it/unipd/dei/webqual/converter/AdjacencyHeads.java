@@ -40,4 +40,16 @@ public class AdjacencyHeads implements Iterable<byte[]> {
     used = true;
     return iterator;
   }
+
+  public static void main(String[] args) throws IOException {
+    AdjacencyHeads hs = new AdjacencyHeads("links.0", 16);
+    long cnt = 0;
+    for(byte[] h : hs) {
+      cnt++;
+    }
+
+    assert(cnt == hs.getCount());
+    System.out.printf("Counted: %d\nComputed: %d", cnt, hs.getCount());
+  }
+
 }
