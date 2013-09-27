@@ -29,4 +29,15 @@ class ImmutableAdjacencyGraph128Spec extends Specification {
     1L << 63            || true
   }
 
+  def "test isHead for buffers" () {
+    expect:
+    def b = buf.collect{i -> (byte) i}.toArray(new byte[buf.size()])
+    isHead(b) == expected
+
+    where:
+    buf                 || expected
+    [0,0,0,0]           || false
+    [0xff,0,0,0]        || true
+  }
+
 }
