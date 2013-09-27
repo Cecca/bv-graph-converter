@@ -8,15 +8,13 @@ public class AdjacencyHeads implements Iterable<byte[]> {
   private final String fileName;
   private final int idLen;
 
-  private AdjacencyHeadIterator iterator;
-  private boolean used;
+  private AdjacencyHeadIterator firstIterator;
 
   public AdjacencyHeads(String fileName, int idLen) throws IOException {
     this.fileName = fileName;
     this.idLen = idLen;
 
-    this.iterator = new AdjacencyHeadIterator(fileName, idLen);
-    this.used = false;
+    this.firstIterator = null;
   }
 
   public String getFileName() {
@@ -28,17 +26,30 @@ public class AdjacencyHeads implements Iterable<byte[]> {
   }
 
   public long getCount() {
-    return iterator.getCount();
+    // completely unwind first iterator
+    if (firstIterator == null) {
+      try {
+        firstIterator = new AdjacencyHeadIterator(fileName, idLen);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    while(firstIterator.hasNext())
+      firstIterator.next();
+    return firstIterator.getCount();
   }
 
   @Override
   public Iterator<byte[]> iterator() {
-    if(used) {
-      throw new IllegalStateException(
-        "The iterator cannot be used more than once.");
+    try {
+      AdjacencyHeadIterator it = new AdjacencyHeadIterator(fileName, idLen);
+      if(firstIterator == null) {
+        firstIterator = it;
+      }
+      return it;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-    used = true;
-    return iterator;
   }
 
   public static void main(String[] args) throws IOException {
