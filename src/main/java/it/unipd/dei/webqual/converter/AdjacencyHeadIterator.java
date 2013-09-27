@@ -1,8 +1,11 @@
 package it.unipd.dei.webqual.converter;
 
 import java.io.*;
+import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import static it.unipd.dei.webqual.converter.Utils.*;
 
@@ -92,14 +95,24 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
     AdjacencyHeadIterator it = new AdjacencyHeadIterator(
       "links.0", 16, false);
 
-    int cnt = 0;
+    Set<BigInteger> heads = new HashSet<>();
 
     while(it.hasNext()) {
-      it.next();
-      cnt++;
+      byte[] head = it.next();
+      BigInteger bi = new BigInteger(head);
+      if(bi.signum() >= 0) {
+        System.err.println("Head with first bit set to 0: " + bi.toString(16));
+        System.err.println("The first byte is: " + head[0]);
+        System.err.println("And isHead returns " + isHead(head));
+        System.exit(1);
+      }
+      boolean notContained = heads.add(bi);
+      if(!notContained) {
+        System.err.println("Duplicate element: " + bi.toString(16));
+      }
     }
 
-    System.out.printf("Counted: %d\nComputed: %d", cnt, it.getCount());
+
   }
 
 }
