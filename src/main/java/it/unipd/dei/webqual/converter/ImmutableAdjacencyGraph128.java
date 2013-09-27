@@ -108,10 +108,6 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
     return (id[0] & HEAD_MASK) == HEAD_MASK;
   }
 
-  protected static boolean isHead(long id) {
-    return (id & HEAD_MASK_L) == HEAD_MASK_L;
-  }
-
   protected static long reset(long id) {
     return id & RESET_MASK;
   }
