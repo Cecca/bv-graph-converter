@@ -56,7 +56,7 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
       read = dis.read(buf);
       if(read == ID_LEN){
         if(isHead(buf)) {
-          long id = reset(new BigInteger(buf).longValue());
+          long id = reset(getLong(buf));
           map.put(id, cnt);
           cnt++;
           if(cnt % 1000 == 0) {
@@ -97,15 +97,15 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
     return l;
   }
 
-  protected boolean isHead(byte[] id) {
+  protected static boolean isHead(byte[] id) {
     return (id[0] & HEAD_MASK) == HEAD_MASK;
   }
 
-  protected boolean isHead(long id) {
+  protected static boolean isHead(long id) {
     return (id & HEAD_MASK_L) == HEAD_MASK_L;
   }
 
-  protected long reset(long id) {
+  protected static long reset(long id) {
     return id & RESET_MASK;
   }
 
@@ -155,7 +155,13 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
           new BufferedInputStream(new FileInputStream(filename)));
         long outdegree;
         long[][] successors = LongBigArrays.EMPTY_BIG_ARRAY;
-        long nextId = resetMap(dis.readLong());
+        long nextId = -1;
+
+        {
+          byte[] firstId = new byte[ID_LEN];
+          dis.read(firstId);
+          nextId = resetMap(getLong(firstId));
+        }
 
         @Override
         public long nextLong() {
@@ -166,15 +172,15 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
 
           try {
             // now read the adjacency
-            long neigh = -1;
+            byte[] buf = new byte[ID_LEN];
             while(dis.available() > 0) {
-              neigh = dis.readLong();
+              dis.read(buf);
               // assign the next long if we are on a head
-              if(isHead(neigh)) {
-                nextId = resetMap(neigh);
+              if(isHead(buf)) {
+                nextId = resetMap(getLong(buf));
                 break;
               } else {
-                long mapped = resetMap(neigh);
+                long mapped = resetMap(getLong(buf));
                 if(mapped >= 0) {
                   LongBigArrays.set(successors, outdegree++, mapped);
                 }

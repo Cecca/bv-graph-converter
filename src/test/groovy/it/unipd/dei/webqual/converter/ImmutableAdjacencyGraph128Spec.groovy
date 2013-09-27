@@ -18,4 +18,15 @@ class ImmutableAdjacencyGraph128Spec extends Specification {
     bigInt == parsed
   }
 
+  def "test isHead for longs"() {
+    expect:
+    isHead(x) == expected
+
+    where:
+    x                   || expected
+    0xffffffffffffffffL || true
+    0L                  || false
+    1L << 63            || true
+  }
+
 }
