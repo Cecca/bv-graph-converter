@@ -24,7 +24,7 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
 
     try {
       AdjacencyHeads heads = new AdjacencyHeads(this.filename, idLen);
-      MD5TransformationStrategy trStrat = new MD5TransformationStrategy();
+      ByteArrayTransformationStrategy trStrat = new ByteArrayTransformationStrategy();
 
       this.map = new MinimalPerfectHashFunction<byte[]>(heads, trStrat);
 
@@ -33,10 +33,6 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private void mapAndCount() {
-
   }
 
   @Override
