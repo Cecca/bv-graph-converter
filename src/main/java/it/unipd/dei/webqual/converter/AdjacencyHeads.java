@@ -7,12 +7,18 @@ public class AdjacencyHeads implements Iterable<byte[]> {
 
   private final String fileName;
   private final int idLen;
+  private final boolean reset;
 
   private AdjacencyHeadIterator firstIterator;
 
   public AdjacencyHeads(String fileName, int idLen) throws IOException {
+    this(fileName, idLen, true);
+  }
+
+  public AdjacencyHeads(String fileName, int idLen, boolean reset) throws IOException {
     this.fileName = fileName;
     this.idLen = idLen;
+    this.reset = reset;
 
     this.firstIterator = null;
   }
@@ -29,7 +35,7 @@ public class AdjacencyHeads implements Iterable<byte[]> {
     // completely unwind first iterator
     if (firstIterator == null) {
       try {
-        firstIterator = new AdjacencyHeadIterator(fileName, idLen);
+        firstIterator = new AdjacencyHeadIterator(fileName, idLen, reset);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -42,7 +48,7 @@ public class AdjacencyHeads implements Iterable<byte[]> {
   @Override
   public Iterator<byte[]> iterator() {
     try {
-      AdjacencyHeadIterator it = new AdjacencyHeadIterator(fileName, idLen);
+      AdjacencyHeadIterator it = new AdjacencyHeadIterator(fileName, idLen, reset);
       if(firstIterator == null) {
         firstIterator = it;
       }

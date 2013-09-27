@@ -10,6 +10,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
   private final String fileName;
   private final int idLen;
+  private final boolean reset;
   private final DataInputStream dis;
 
   private boolean hasNext;
@@ -17,9 +18,10 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
   private long count;
 
-  public AdjacencyHeadIterator(String fileName, int idLen) throws IOException {
+  public AdjacencyHeadIterator(String fileName, int idLen, boolean reset) throws IOException {
     this.fileName = fileName;
     this.idLen = idLen;
+    this.reset = reset;
     this.dis = new DataInputStream(
       new BufferedInputStream(new FileInputStream(this.fileName)));
 
@@ -51,7 +53,12 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
         dis.read(buf);
         if(isHead(buf)) {
           count++;
-          next = reset(buf);
+          if(reset) {
+            next = reset(buf);
+          } else {
+            next = new byte[idLen];
+            System.arraycopy(buf, 0, next, 0, idLen);
+          }
           hasNext = true;
           break;
         }
@@ -83,7 +90,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
   public static void main(String[] args) throws IOException {
     AdjacencyHeadIterator it = new AdjacencyHeadIterator(
-      "links.0", 16);
+      "links.0", 16, false);
 
     int cnt = 0;
 
