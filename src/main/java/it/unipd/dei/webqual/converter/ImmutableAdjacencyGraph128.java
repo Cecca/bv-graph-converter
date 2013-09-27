@@ -9,8 +9,6 @@ import it.unimi.dsi.fastutil.longs.LongBigArrays;
 import it.unimi.dsi.logging.ProgressLogger;
 
 import java.io.*;
-import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -35,12 +33,12 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
   private final long numNodes;
 
   /** A map between the original IDs of the graph and IDs in the range `[0, numNodes]` */
-  private final Map<Long, Long> map;
+  private final Map<Long, Integer> map;
 
   private ImmutableAdjacencyGraph128( final CharSequence filename ) throws IOException {
     System.out.println("Creating ImmutableAdjacencyGraph128");
     this.filename = filename.toString();
-    this.map = new Long2LongOpenHashMap();
+    this.map = new Long2IntOpenHashMap();
     this.numNodes = countNodes();
   }
 
@@ -48,12 +46,12 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
     DataInputStream dis = new DataInputStream(
       new BufferedInputStream(new FileInputStream(this.filename)));
 
-    long cnt = 0;
+    int cnt = 0;
 
     int read;
     byte[] buf = new byte[ID_LEN];
 
-    while (true) { // while true: it would be `while (read == 16)` but this way we make only one comparison
+    while (true) { // while true: it would be `while (read == 128)` but this way we make only one comparison
       read = dis.read(buf);
       if(read == ID_LEN){
         if(isHead(buf)) {
@@ -61,7 +59,7 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
           map.put(id, cnt);
           cnt++;
           if(cnt % 1000 == 0) {
-            System.out.printf("%d\r", cnt);
+            System.out.printf("%d - %d butes left\r", cnt, dis.available());
           }
         }
       } else {
@@ -111,7 +109,7 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
   }
 
   protected long resetMap(long id) {
-    Long l = map.get(reset(id));
+    Integer l = map.get(reset(id));
     if (l == null) {
       return -1;
     } else {
