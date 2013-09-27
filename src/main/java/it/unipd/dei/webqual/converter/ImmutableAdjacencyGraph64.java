@@ -72,11 +72,15 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
           map.put(id, cnt);
           cnt++;
         }
+        if(cnt % 1000 == 0) {
+          System.out.printf("%d\r", cnt);
+        }
       } else {
         break;
       }
     }
 
+    System.out.println();
     dis.close();
     if(read != -1) { // -1 means stream exhausted
       throw new IllegalStateException("The last ID was not of " + ID_LEN + " bytes");
