@@ -7,6 +7,8 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongBigArrays;
 import it.unimi.dsi.logging.ProgressLogger;
 
+import static it.unipd.dei.webqual.converter.Utils.*;
+
 import java.io.*;
 import java.math.BigInteger;
 import java.util.Map;
@@ -28,15 +30,6 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
 
   /** Length in bytes of the IDs */
   public static final int ID_LEN = 8;
-
-  /** `long` mask with the first bit set */
-  public static final long HEAD_MASK_L = 1L << 63;
-
-  /** `long` mask with all the bits other than the most significant set. */
-  public static final long RESET_MASK = ~HEAD_MASK_L;
-
-  /** `byte` mask with the most significant bit set. */
-  public static final byte HEAD_MASK = (byte) (1 << 7);
 
   /** The name of the file storing the graph. */
   private final String filename;
@@ -94,18 +87,6 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
       throw new IllegalStateException("The last ID was not of " + ID_LEN + " bytes");
     }
     return cnt;
-  }
-
-  protected boolean isHead(byte[] id) {
-    return (id[0] & HEAD_MASK) == HEAD_MASK;
-  }
-
-  protected boolean isHead(long id) {
-    return (id & HEAD_MASK_L) == HEAD_MASK_L;
-  }
-
-  protected long reset(long id) {
-    return id & RESET_MASK;
   }
 
   protected long resetMap(long id) {

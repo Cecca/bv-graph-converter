@@ -20,7 +20,7 @@ public class Main {
 
     System.out.println("==== Loading graph from " + inputFile);
     ImmutableGraph iag =
-      ImmutableAdjacencyGraph64.loadOffline(inputFile);
+      ImmutableAdjacencyGraph128.loadOffline(inputFile);
     System.out.println("Loaded graph with " + iag.numNodes() + " nodes");
 
 
