@@ -71,9 +71,9 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
           long id = reset(new BigInteger(buf).longValue());
           map.put(id, cnt);
           cnt++;
-        }
-        if(cnt % 1000 == 0) {
-          System.out.printf("%d\r", cnt);
+          if(cnt % 1000 == 0) {
+            System.out.printf("%d\r", cnt);
+          }
         }
       } else {
         break;
