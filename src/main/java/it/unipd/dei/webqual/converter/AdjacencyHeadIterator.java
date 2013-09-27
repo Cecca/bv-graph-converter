@@ -16,7 +16,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
   private boolean hasNext;
   private byte[] next;
 
-  private Collection<BigInteger> neighbours;
+  private List<BigInteger> neighbours;
 
   private long count;
 
@@ -49,7 +49,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
     return hasNext;
   }
 
-  public Collection<BigInteger> neighbours() {
+  public List<BigInteger> neighbours() {
     return neighbours;
   }
 
@@ -109,7 +109,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
     AdjacencyHeadIterator it = new AdjacencyHeadIterator(
       args[0], 16, false);
 
-    Map<BigInteger, Collection<BigInteger>> heads = new HashMap<>();
+    Map<BigInteger, List<BigInteger>> heads = new HashMap<>();
     long duplicates = 0;
     long diffNeighsDuplicates = 0;
 
@@ -117,16 +117,19 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
       byte[] head = it.next();
       BigInteger bi = new BigInteger(head);
       if(bi.signum() >= 0) {
-//        System.out.println("Head with first bit set to 0: " + bi.toString(16));
-//        System.out.println("The first byte is: " + head[0]);
-//        System.out.println("And isHead returns " + isHead(head));
+        System.out.println("Head with first bit set to 0: " + bi.toString(16));
+        System.out.println("The first byte is: " + head[0]);
+        System.out.println("And isHead returns " + isHead(head));
         System.exit(1);
       }
-      Collection<BigInteger> contained = heads.get(bi);
+      List<BigInteger> contained = heads.get(bi);
+
       if(contained != null) {
-//        System.out.printf("Duplicate element: %s\n\tneighbours a: %s\n\tneighbours b: %s\n",
-//          bi.toString(16), contained.toString(), it.neighbours());
         duplicates++;
+
+        Collections.sort(contained);
+        Collections.sort(it.neighbours());
+        
         if(it.neighbours().equals(contained)) {
           diffNeighsDuplicates++;
         }
@@ -139,10 +142,6 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
       args[0],
       (((double) duplicates) / it.getCount()) * 100,
       (((double) diffNeighsDuplicates) / duplicates) * 100);
-//System.out.printf("Duplicates: %d / %d   -   %f %%\n",
-//      duplicates, it.getCount(), (((double) duplicates) / it.getCount()) * 100);
-//    System.out.printf("Of which non empty: %d / %d  -  %f %%\n",
-//      diffNeighsDuplicates, duplicates, (((double) diffNeighsDuplicates) / duplicates) * 100);
 
   }
 
