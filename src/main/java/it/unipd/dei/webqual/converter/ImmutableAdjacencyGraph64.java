@@ -45,21 +45,24 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
   private final long numNodes;
 
   /** A map between the original IDs of the graph and IDs in the range `[0, numNodes]` */
-  private final Map<Long, Integer> map;
+  private final Long2IntOpenHashMap map;
 
   private ImmutableAdjacencyGraph64( final CharSequence filename ) throws IOException {
     this.filename = filename.toString();
     this.map = new Long2IntOpenHashMap();
+    this.map.defaultReturnValue(-1);
     this.numNodes = countNodes();
   }
 
   protected long countNodes() throws IOException {
     DataInputStream dis = new DataInputStream(
       new BufferedInputStream(new FileInputStream(this.filename)));
+    final int defaultReturnValue = map.defaultReturnValue();
 
     // This is an integer, since we don't deal (for now) with graphs with more
     // than 2^31 nodes
     int cnt = 0;
+    int collisions = 0;
 
     int read;
     byte[] buf = new byte[ID_LEN];
@@ -69,7 +72,11 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
       if(read == ID_LEN){
         if(isHead(buf)) {
           long id = reset(new BigInteger(buf).longValue());
-          map.put(id, cnt);
+          int old = map.put(id, cnt);
+          if (old != defaultReturnValue) {
+            collisions++;
+            System.out.println("Collision on id: " + id + " => " + old);
+          }
           cnt++;
           if(cnt % 1000 == 0) {
             System.out.printf("%d\r", cnt);
@@ -80,7 +87,8 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
       }
     }
 
-    System.out.println();
+    System.out.printf("Collisions %d/%d : %f\n",
+      collisions, cnt, (((double) collisions) / cnt));
     dis.close();
     if(read != -1) { // -1 means stream exhausted
       throw new IllegalStateException("The last ID was not of " + ID_LEN + " bytes");
@@ -101,12 +109,7 @@ public class ImmutableAdjacencyGraph64 extends ImmutableSequentialGraph {
   }
 
   protected long resetMap(long id) {
-    Integer l = map.get(reset(id));
-    if (l == null) {
-      return -1;
-    } else {
-      return l;
-    }
+    return map.get(reset(id));
   }
 
   @Override
