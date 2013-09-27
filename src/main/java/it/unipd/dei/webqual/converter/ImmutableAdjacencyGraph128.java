@@ -54,10 +54,6 @@ public class ImmutableAdjacencyGraph128 extends ImmutableSequentialGraph {
     while (true) { // while true: it would be `while (read == 128)` but this way we make only one comparison
       read = dis.read(buf);
       if(read == ID_LEN){
-        if(cnt == 0 && !isHead(buf)) {
-          throw new NoSuchElementException(
-            "The first element of the file is not a head");
-        }
         if(isHead(buf)) {
           long id = reset(getLong(buf));
           map.put(id, cnt);
