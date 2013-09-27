@@ -135,10 +135,14 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
       }
     }
 
-    System.out.printf("Duplicates: %d / %d   -   %f %%\n",
-      duplicates, it.getCount(), (((double) duplicates) / it.getCount()) * 100);
-    System.out.printf("Of which non empty: %d / %d  -  %f %%\n",
-      nonEmptyDuplicates, duplicates, (((double) nonEmptyDuplicates) / duplicates) * 100);
+    System.out.printf("%s   %f   %f\n",
+      args[0],
+      (((double) duplicates) / it.getCount()) * 100,
+      (((double) nonEmptyDuplicates) / duplicates) * 100);
+//System.out.printf("Duplicates: %d / %d   -   %f %%\n",
+//      duplicates, it.getCount(), (((double) duplicates) / it.getCount()) * 100);
+//    System.out.printf("Of which non empty: %d / %d  -  %f %%\n",
+//      nonEmptyDuplicates, duplicates, (((double) nonEmptyDuplicates) / duplicates) * 100);
 
   }
 
