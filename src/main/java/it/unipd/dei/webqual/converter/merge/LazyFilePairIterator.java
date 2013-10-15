@@ -19,7 +19,7 @@ public class LazyFilePairIterator implements Iterator<Pair> {
   }
 
   @Override
-  public it.unipd.dei.webqual.converter.merge.Pair next() {
+  public Pair next() {
     return new Pair(innerIterator.next(), innerIterator.neighbours());
   }
 

@@ -23,7 +23,6 @@ public class GraphMerger {
       pairs.add(it.next());
     }
 
-
     Collections.sort(pairs);
     writePairs(outPath, pairs);
   }

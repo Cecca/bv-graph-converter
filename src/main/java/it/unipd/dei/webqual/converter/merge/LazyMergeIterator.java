@@ -1,5 +1,6 @@
 package it.unipd.dei.webqual.converter.merge;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -84,4 +85,19 @@ public class LazyMergeIterator<T extends Comparable<T>> implements Iterator<T> {
   public void remove() {
     throw new UnsupportedOperationException();
   }
+
+  public static <T extends Comparable<T>> LazyMergeIterator<T> compose(
+    LazyMergeIterator<T>... iterators) {
+
+    if(iterators.length == 1) {
+      return iterators[0];
+    }
+    int h = iterators.length / 2;
+    LazyMergeIterator<T>
+      a = compose(Arrays.copyOfRange(iterators, 0, h)),
+      b = compose(Arrays.copyOfRange(iterators, h, iterators.length));
+
+    return new LazyMergeIterator<>(a, b, a.merger);
+  }
+
 }
