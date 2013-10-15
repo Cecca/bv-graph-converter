@@ -14,31 +14,15 @@ import java.util.List;
  */
 public class GraphMerger {
 
-  private static final ArrayComparator ARRAY_COMPARATOR = new ArrayComparator();
-
-  public static class Pair implements Comparable<Pair> {
-    byte[] head;
-    List<byte[]> neighbours;
-
-    public Pair(byte[] head, List<byte[]> neighbours) {
-      this.head = head;
-      this.neighbours = neighbours;
-    }
-
-    @Override
-    public int compareTo(Pair other) {
-      return ARRAY_COMPARATOR.compare(this.head, other.head);
-    }
-  }
-
   public static void sort(String inPath, String outPath, int idLen) throws IOException {
     List<Pair> pairs = new LinkedList<>();
 
     // the `true` parameter is for resetting the first bit of the IDs
-    AdjacencyHeadIterator it = new AdjacencyHeadIterator(inPath, idLen, true);
+    LazyFilePairIterator it = new LazyFilePairIterator(inPath, idLen);
     while(it.hasNext()) {
-      pairs.add(new Pair(it.next(), it.neighbours()));
+      pairs.add(it.next());
     }
+
 
     Collections.sort(pairs);
     writePairs(outPath, pairs);
