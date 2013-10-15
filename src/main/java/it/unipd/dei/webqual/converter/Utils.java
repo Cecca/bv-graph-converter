@@ -35,15 +35,20 @@ public class Utils {
     return l;
   }
 
-  protected static boolean isHead(byte[] id) {
+  public static boolean isHead(byte[] id) {
     return (id[0] & HEAD_MASK) == HEAD_MASK;
   }
 
-  protected static boolean isHead(long id) {
+  public static boolean isHead(long id) {
     return (id & HEAD_MASK_L) == HEAD_MASK_L;
   }
 
-  protected static long reset(long id) {
+  public static byte[] setHead(byte[] id) {
+    id[0] = (byte) (id[0] | HEAD_MASK);
+    return id;
+  }
+
+  public static long reset(long id) {
     return id & RESET_MASK_L;
   }
 
