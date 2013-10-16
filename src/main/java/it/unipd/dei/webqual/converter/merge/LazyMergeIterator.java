@@ -1,6 +1,7 @@
 package it.unipd.dei.webqual.converter.merge;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -8,22 +9,26 @@ import java.util.NoSuchElementException;
  * Iterates lazily over the sequence obtained as the merge of two given
  * sequences
  */
-public class LazyMergeIterator<T extends Comparable<T>> implements Iterator<T> {
+public class LazyMergeIterator<T> implements Iterator<T> {
 
   private Iterator<T> first;
   private Iterator<T> second;
 
+  private Comparator<T> comparator;
   private Merger<T> merger;
 
   private T firstNext;
   private T secondNext;
 
-  public LazyMergeIterator(
-    Iterator<T> first, Iterator<T> second, Merger<T> merger) {
+  public LazyMergeIterator( Iterator<T> first,
+                            Iterator<T> second,
+                            Comparator<T> comparator,
+                            Merger<T> merger) {
 
     this.first = first;
     this.second = second;
 
+    this.comparator = comparator;
     this.merger = merger;
 
     this.firstNext = (first.hasNext())? first.next() : null;
@@ -58,7 +63,7 @@ public class LazyMergeIterator<T extends Comparable<T>> implements Iterator<T> {
       throw new NoSuchElementException();
     }
 
-    int res = firstNext.compareTo(secondNext);
+    int res = comparator.compare(firstNext, secondNext);
 
     if(res < 0) {
       return getAndNextFirst();
@@ -70,10 +75,10 @@ public class LazyMergeIterator<T extends Comparable<T>> implements Iterator<T> {
     // subsequent equals elements
     T merged = merger.merge(getAndNextFirst(), getAndNextSecond());
 
-    while (firstNext != null && merged.compareTo(firstNext) == 0) {
+    while (firstNext != null && comparator.compare(merged, firstNext) == 0) {
       merged = merger.merge(merged, getAndNextFirst());
     }
-    while (firstNext != null && merged.compareTo(secondNext) == 0) {
+    while (firstNext != null && comparator.compare(merged, secondNext) == 0) {
       merged = merger.merge(merged, getAndNextSecond());
     }
 
@@ -86,21 +91,22 @@ public class LazyMergeIterator<T extends Comparable<T>> implements Iterator<T> {
   }
 
   public static <T extends Comparable<T>> LazyMergeIterator<T> compose(
-    Merger<T> merger, LazyMergeIterator<T>... iterators) {
+    Comparator<T> comparator, Merger<T> merger, LazyMergeIterator<T>... iterators) {
 
     if(iterators.length == 1) {
-      return new LazyMergeIterator<T>(iterators[0], new DumbIterator<T>(), merger);
+      return new LazyMergeIterator<T>(
+        iterators[0], new DumbIterator<T>(), comparator, merger);
     }
     if(iterators.length == 2) {
-      return new LazyMergeIterator<>(iterators[0], iterators[1], merger);
+      return new LazyMergeIterator<>(iterators[0], iterators[1], comparator, merger);
     }
-    
+
     int h = iterators.length / 2;
     LazyMergeIterator<T>
-      a = compose(merger, Arrays.copyOfRange(iterators, 0, h)),
-      b = compose(merger, Arrays.copyOfRange(iterators, h, iterators.length));
+      a = compose(comparator, merger, Arrays.copyOfRange(iterators, 0, h)),
+      b = compose(comparator, merger, Arrays.copyOfRange(iterators, h, iterators.length));
 
-    return new LazyMergeIterator<>(a, b, merger);
+    return new LazyMergeIterator<>(a, b, comparator, merger);
   }
 
   protected static class DumbIterator<T extends Comparable<T>> implements Iterator<T> {
