@@ -1,5 +1,8 @@
 package it.unipd.dei.webqual.converter.merge;
 
+import com.codahale.metrics.Counter;
+import it.unipd.dei.webqual.converter.merge.GraphMerger;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -10,6 +13,8 @@ import java.util.NoSuchElementException;
  * sequences
  */
 public class LazyMergeIterator<T> implements Iterator<T> {
+
+  private final Counter duplicateCounter = GraphMerger.metrics.counter("duplicates");
 
   private Iterator<T> first;
   private Iterator<T> second;
@@ -80,12 +85,15 @@ public class LazyMergeIterator<T> implements Iterator<T> {
     // if the elements are equals we should merge them, along with all the
     // subsequent equals elements
     T merged = merger.merge(getAndNextFirst(), getAndNextSecond());
+    duplicateCounter.inc();
 
     while (firstNext != null && comparator.compare(merged, firstNext) == 0) {
       merged = merger.merge(merged, getAndNextFirst());
+      duplicateCounter.inc();
     }
     while (secondNext != null && comparator.compare(merged, secondNext) == 0) {
       merged = merger.merge(merged, getAndNextSecond());
+      duplicateCounter.inc();
     }
 
     return merged;

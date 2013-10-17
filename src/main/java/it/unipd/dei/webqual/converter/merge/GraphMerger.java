@@ -29,7 +29,7 @@ public class GraphMerger {
 
   private static void sort(String inPath, String outPath, int idLen) throws IOException {
     log.info("Sorting {}", inPath);
-    Timer timer = metrics.timer("File sorting");
+    Timer timer = metrics.timer("file-sorting");
     Timer.Context context = timer.time();
     List<Pair> pairs = new LinkedList<>();
 
@@ -60,7 +60,7 @@ public class GraphMerger {
 
   private static File[] sortFiles(File[] inFiles) throws IOException {
     log.info("============= Sorting files ===============");
-    Timer timer = metrics.timer("Total sorting");
+    Timer timer = metrics.timer("total-sorting");
     Timer.Context context = timer.time();
     File[] sortedFiles = new File[inFiles.length];
     for(int i = 0; i<inFiles.length; i++) {
@@ -77,7 +77,7 @@ public class GraphMerger {
       throw new IllegalArgumentException("groupBy should be >= 2");
     }
     log.info("============= Merging files ===============");
-    Timer timer = metrics.timer("Total merging");
+    Timer timer = metrics.timer("total-merging");
     Timer.Context context = timer.time();
     if(sortedFiles.length <= groupBy) {
       mergeFiles(sortedFiles, outputName);
@@ -105,7 +105,7 @@ public class GraphMerger {
    */
   private static void mergeFiles(File[] sortedFiles, String outputName) throws IOException {
     log.info("Merging {}", Arrays.toString(sortedFiles));
-    Timer timer = metrics.timer("File merging");
+    Timer timer = metrics.timer("file-merging");
     Timer.Context context = timer.time();
     LazyMergeIterator<Pair>[] iterators = new LazyMergeIterator[sortedFiles.length/2];
     for(int i=0; i<iterators.length; i++) {
@@ -152,12 +152,15 @@ public class GraphMerger {
 
     mergeFiles(sortedFiles, outputName, GROUP_BY);
 
+    log.info("{} duplicates have been merged", metrics.counter("duplicates").getCount());
+
     CsvReporter reporter = CsvReporter.forRegistry(metrics)
                                       .formatFor(Locale.ITALY)
                                       .convertRatesTo(TimeUnit.SECONDS)
                                       .convertDurationsTo(TimeUnit.SECONDS)
                                       .build(new File("."));
     reporter.report();
+    reporter.close();
   }
 
 }
