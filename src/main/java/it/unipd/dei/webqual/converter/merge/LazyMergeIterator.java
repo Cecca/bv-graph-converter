@@ -36,6 +36,12 @@ public class LazyMergeIterator<T> implements Iterator<T> {
 
   }
 
+  public LazyMergeIterator( Iterator<T> single,
+                            Comparator<T> comparator,
+                            Merger<T> merger) {
+    this(single, new DumbIterator<T>(), comparator, merger);
+  }
+
   @Override
   public boolean hasNext() {
     return firstNext != null || secondNext != null;
@@ -90,7 +96,7 @@ public class LazyMergeIterator<T> implements Iterator<T> {
     throw new UnsupportedOperationException();
   }
 
-  public static <T extends Comparable<T>> LazyMergeIterator<T> compose(
+  public static <T> LazyMergeIterator<T> compose(
     Comparator<T> comparator, Merger<T> merger, LazyMergeIterator<T>... iterators) {
 
     if(iterators.length == 1) {
@@ -109,7 +115,7 @@ public class LazyMergeIterator<T> implements Iterator<T> {
     return new LazyMergeIterator<>(a, b, comparator, merger);
   }
 
-  protected static class DumbIterator<T extends Comparable<T>> implements Iterator<T> {
+  protected static class DumbIterator<T> implements Iterator<T> {
 
     @Override
     public boolean hasNext() {

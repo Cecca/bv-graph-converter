@@ -1,10 +1,10 @@
 package it.unipd.dei.webqual.converter.merge;
 
-import it.unipd.dei.webqual.converter.AdjacencyHeadIterator;
 import it.unipd.dei.webqual.converter.Utils;
 
 import java.io.*;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,6 +37,76 @@ public class GraphMerger {
         out.write(neigh);
       }
     }
+    out.close();
+  }
+
+  private static final int GROUP_BY = 4;
+  private static final int ID_LEN = 16;
+  private static final String tmpDir = "/tmp/graph-merger/";
+  private static final String sortedTmpPrefix = "sorted-";
+  private static final PairComparator PAIR_COMPARATOR = new PairComparator();
+  private static final PairMerger PAIR_MERGER = new PairMerger();
+
+  public static File[] sortFiles(File[] inFiles) throws IOException {
+    File[] sortedFiles = new File[inFiles.length];
+    for(int i = 0; i<inFiles.length; i++) {
+      String sortedName = tmpDir + sortedTmpPrefix + inFiles[i].getName();
+      sortedFiles[i] = new File(sortedName);
+      sort(inFiles[i].getCanonicalPath(), sortedName, ID_LEN);
+    }
+    return sortedFiles;
+  }
+
+  public static void main(String[] args) throws IOException {
+
+    if(args.length != 2) {
+      System.err.println("USAGE: graph-merger input_dir output_file");
+    }
+
+    String inputDir = args[0];
+    String outputName = args[1];
+
+    new File(tmpDir).mkdir();
+
+    File[] inFiles = new File(inputDir).listFiles();
+
+    File[] sortedFiles = sortFiles(inFiles);
+
+    mergeFiles(sortedFiles, outputName);
+  }
+
+  /**
+   * Creates a single lazy iterator over the merged files and uses it to create
+   * the real merge file.
+   * @param sortedFiles
+   * @param outputName
+   */
+  private static void mergeFiles(File[] sortedFiles, String outputName) throws IOException {
+    LazyMergeIterator<Pair>[] iterators = new LazyMergeIterator[sortedFiles.length/2];
+    for(int i=0; i<iterators.length; i++) {
+      if((2*i+1) < sortedFiles.length) {
+        iterators[i] = new LazyMergeIterator<>(
+          new LazyFilePairIterator(sortedFiles[2*i].getCanonicalPath(), ID_LEN),
+          new LazyFilePairIterator(sortedFiles[2*i+1].getCanonicalPath(), ID_LEN),
+          PAIR_COMPARATOR, PAIR_MERGER);
+      } else {
+        iterators[i] = new LazyMergeIterator<>(
+          new LazyFilePairIterator(sortedFiles[2*i].getCanonicalPath(), ID_LEN),
+          PAIR_COMPARATOR, PAIR_MERGER);
+      }
+    }
+
+    LazyMergeIterator<Pair> it = LazyMergeIterator.compose(PAIR_COMPARATOR, PAIR_MERGER, iterators);
+
+    OutputStream out = new BufferedOutputStream(new FileOutputStream(outputName));
+    while(it.hasNext()) {
+      Pair pair = it.next();
+      out.write(Utils.setHead(pair.head));
+      for(byte[] neigh : pair.neighbours) {
+        out.write(neigh);
+      }
+    }
+    out.close();
   }
 
 }
