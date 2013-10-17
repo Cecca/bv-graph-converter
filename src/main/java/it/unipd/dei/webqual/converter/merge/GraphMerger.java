@@ -150,7 +150,7 @@ public class GraphMerger {
 
     File[] inFiles = opts.inputDir.listFiles();
 
-    File[] sortedFiles = sortFiles(inFiles, opts.idLen);
+    File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen);
 
     mergeFiles(sortedFiles, opts.outputName, opts.groupBy, opts.idLen);
 
@@ -173,11 +173,14 @@ public class GraphMerger {
     @Option(aliases="--out", name="-o", usage="The output file", required=true, metaVar="FILE")
     String outputName;
 
-    @Option(aliases="--group-by", name="-g", usage="merge files in chinks of N files", metaVar="N")
+    @Option(aliases="--group-by", name="-g", usage="Merge files in chunks of N files", metaVar="N")
     int groupBy = 2;
 
     @Option(aliases="--id-len", name="-l", usage="The length of the IDs in bytes", metaVar="N")
     int idLen = 16;
+
+    @Option(name="--no-sort", usage="Skip sorting phase. Input must be already sorted")
+    boolean noSort = false;
 
   }
 
