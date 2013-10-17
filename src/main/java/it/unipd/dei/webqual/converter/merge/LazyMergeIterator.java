@@ -84,7 +84,7 @@ public class LazyMergeIterator<T> implements Iterator<T> {
     while (firstNext != null && comparator.compare(merged, firstNext) == 0) {
       merged = merger.merge(merged, getAndNextFirst());
     }
-    while (firstNext != null && comparator.compare(merged, secondNext) == 0) {
+    while (secondNext != null && comparator.compare(merged, secondNext) == 0) {
       merged = merger.merge(merged, getAndNextSecond());
     }
 
