@@ -3,10 +3,7 @@ package it.unipd.dei.webqual.converter.merge;
 import it.unipd.dei.webqual.converter.Utils;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class takes as input a set of adjacency list files and merges them
@@ -72,7 +69,27 @@ public class GraphMerger {
 
     File[] sortedFiles = sortFiles(inFiles);
 
-    mergeFiles(sortedFiles, outputName);
+    mergeFiles(sortedFiles, outputName, GROUP_BY);
+  }
+
+  private static void mergeFiles(File[] sortedFiles, String outputName, int groupBy) throws IOException {
+    if(groupBy < 2) {
+      throw new IllegalArgumentException("groupBy should be >= 2");
+    }
+    if(sortedFiles.length <= groupBy) {
+      mergeFiles(sortedFiles, outputName);
+    }
+
+    File[] tmpFiles = new File[sortedFiles.length / groupBy];
+
+    for(int i = 0; i < tmpFiles.length; i++) {
+      tmpFiles[i] = File.createTempFile("graph-merger", "merging");
+
+      File[] group = Arrays.copyOfRange(
+        sortedFiles, i*groupBy, Math.min((i + 1)*groupBy, sortedFiles.length));
+
+      mergeFiles(group, tmpFiles[i].getCanonicalPath());
+    }
   }
 
   /**
