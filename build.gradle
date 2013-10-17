@@ -16,6 +16,7 @@ dependencies {
   compile "com.codahale.metrics:metrics-core:3.0.1"
   compile "org.slf4j:slf4j-api:1.7.5"
   compile "org.slf4j:slf4j-simple:1.7.5"
+  compile "args4j:args4j:2.0.25"
   testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
 }
 

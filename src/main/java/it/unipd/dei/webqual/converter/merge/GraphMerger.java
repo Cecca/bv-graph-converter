@@ -2,9 +2,11 @@ package it.unipd.dei.webqual.converter.merge;
 
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Slf4jReporter;
 import com.codahale.metrics.Timer;
 import it.unipd.dei.webqual.converter.Utils;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +24,6 @@ public class GraphMerger {
 
   public static final MetricRegistry metrics = new MetricRegistry();
 
-  private static final int GROUP_BY = 4;
-  private static final int ID_LEN = 16;
   private static final PairComparator PAIR_COMPARATOR = new PairComparator();
   private static final PairMerger PAIR_MERGER = new PairMerger();
 
@@ -58,21 +58,21 @@ public class GraphMerger {
     out.close();
   }
 
-  private static File[] sortFiles(File[] inFiles) throws IOException {
+  private static File[] sortFiles(File[] inFiles, int idLen) throws IOException {
     log.info("============= Sorting files ===============");
     Timer timer = metrics.timer("total-sorting");
     Timer.Context context = timer.time();
     File[] sortedFiles = new File[inFiles.length];
     for(int i = 0; i<inFiles.length; i++) {
       sortedFiles[i] = File.createTempFile("graph-merger", "sorting"+inFiles[i].getName());
-      sort(inFiles[i].getCanonicalPath(), sortedFiles[i].getCanonicalPath(), ID_LEN);
+      sort(inFiles[i].getCanonicalPath(), sortedFiles[i].getCanonicalPath(), idLen);
     }
     long time = context.stop();
     log.info("====== Files sorted, elapsed time: {} seconds", time / 1000000000);
     return sortedFiles;
   }
 
-  private static void mergeFiles(File[] sortedFiles, String outputName, int groupBy) throws IOException {
+  private static void mergeFiles(File[] sortedFiles, String outputName, int groupBy, int idLen) throws IOException {
     if(groupBy < 2) {
       throw new IllegalArgumentException("groupBy should be >= 2");
     }
@@ -80,7 +80,7 @@ public class GraphMerger {
     Timer timer = metrics.timer("total-merging");
     Timer.Context context = timer.time();
     if(sortedFiles.length <= groupBy) {
-      mergeFiles(sortedFiles, outputName);
+      mergeFiles(sortedFiles, outputName, idLen);
     }
 
     File[] tmpFiles = new File[sortedFiles.length / groupBy];
@@ -91,7 +91,7 @@ public class GraphMerger {
       File[] group = Arrays.copyOfRange(
         sortedFiles, i*groupBy, Math.min((i + 1)*groupBy, sortedFiles.length));
 
-      mergeFiles(group, tmpFiles[i].getCanonicalPath());
+      mergeFiles(group, tmpFiles[i].getCanonicalPath(), idLen);
     }
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
@@ -103,7 +103,7 @@ public class GraphMerger {
    * @param sortedFiles
    * @param outputName
    */
-  private static void mergeFiles(File[] sortedFiles, String outputName) throws IOException {
+  private static void mergeFiles(File[] sortedFiles, String outputName, int idLen) throws IOException {
     log.info("Merging {}", Arrays.toString(sortedFiles));
     Timer timer = metrics.timer("file-merging");
     Timer.Context context = timer.time();
@@ -111,12 +111,12 @@ public class GraphMerger {
     for(int i=0; i<iterators.length; i++) {
       if((2*i+1) < sortedFiles.length) {
         iterators[i] = new LazyMergeIterator<>(
-          new LazyFilePairIterator(sortedFiles[2*i].getCanonicalPath(), ID_LEN),
-          new LazyFilePairIterator(sortedFiles[2*i+1].getCanonicalPath(), ID_LEN),
+          new LazyFilePairIterator(sortedFiles[2*i].getCanonicalPath(), idLen),
+          new LazyFilePairIterator(sortedFiles[2*i+1].getCanonicalPath(), idLen),
           PAIR_COMPARATOR, PAIR_MERGER);
       } else {
         iterators[i] = new LazyMergeIterator<>(
-          new LazyFilePairIterator(sortedFiles[2*i].getCanonicalPath(), ID_LEN),
+          new LazyFilePairIterator(sortedFiles[2*i].getCanonicalPath(), idLen),
           PAIR_COMPARATOR, PAIR_MERGER);
       }
     }
@@ -138,19 +138,21 @@ public class GraphMerger {
 
   public static void main(String[] args) throws IOException {
 
-    if(args.length != 2) {
-      log.error("USAGE: graph-merger input_dir output_file");
+    Options opts = new Options();
+    CmdLineParser parser = new CmdLineParser(opts);
+    try {
+      parser.parseArgument(args);
+    } catch (CmdLineException e) {
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
       System.exit(1);
     }
 
-    String inputDir = args[0];
-    String outputName = args[1];
+    File[] inFiles = opts.inputDir.listFiles();
 
-    File[] inFiles = new File(inputDir).listFiles();
+    File[] sortedFiles = sortFiles(inFiles, opts.idLen);
 
-    File[] sortedFiles = sortFiles(inFiles);
-
-    mergeFiles(sortedFiles, outputName, GROUP_BY);
+    mergeFiles(sortedFiles, opts.outputName, opts.groupBy, opts.idLen);
 
     log.info("{} duplicates have been merged", metrics.counter("duplicates").getCount());
 
@@ -161,6 +163,22 @@ public class GraphMerger {
                                       .build(new File("."));
     reporter.report();
     reporter.close();
+  }
+
+  public static class Options {
+
+    @Option(aliases="--input-dir", name="-i", usage="The input directory", required=true, metaVar="FILE")
+    File inputDir;
+
+    @Option(aliases="--out", name="-o", usage="The output file", required=true, metaVar="FILE")
+    String outputName;
+
+    @Option(aliases="--group-by", name="-g", usage="merge files in chinks of N files", metaVar="N")
+    int groupBy = 2;
+
+    @Option(aliases="--id-len", name="-l", usage="The length of the IDs in bytes", metaVar="N")
+    int idLen = 16;
+
   }
 
 }
