@@ -58,6 +58,7 @@ public class GraphMerger {
 
     if(args.length != 2) {
       System.err.println("USAGE: graph-merger input_dir output_file");
+      System.exit(1);
     }
 
     String inputDir = args[0];
