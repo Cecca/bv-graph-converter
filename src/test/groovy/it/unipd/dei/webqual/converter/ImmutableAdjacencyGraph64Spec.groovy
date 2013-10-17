@@ -5,9 +5,7 @@ import it.unimi.dsi.big.webgraph.EFGraph
 import it.unimi.dsi.fastutil.longs.LongBigArrays
 import spock.lang.Specification
 
-import java.nio.ByteBuffer
-
-import static it.unipd.dei.webqual.converter.ImmutableAdjacencyGraph64.*
+import static it.unipd.dei.webqual.converter.Utils.*
 
 class ImmutableAdjacencyGraph64Spec extends Specification {
 
@@ -52,7 +50,7 @@ class ImmutableAdjacencyGraph64Spec extends Specification {
 
   def "test conversion: shuffled nodes" () {
     setup:
-    def filename = "/tmp/immutable-graph-test"
+    def filename = File.createTempFile("immutable-graph-test", "").getCanonicalPath()
     // create graph
     def graph = [ [0L, 1L, 2L, 3L]
             , [2L, 0L, 3L]
@@ -84,7 +82,7 @@ class ImmutableAdjacencyGraph64Spec extends Specification {
 
   def "test conversion: shuffled nodes non adjacent" () {
     setup:
-    def filename = "/tmp/immutable-graph-test"
+    def filename = File.createTempFile("immutable-graph-test", "").getCanonicalPath()
     // create graph
     def graph = [ [0L, 2L, 3L]
                 , [3L, 0L, 2L]

@@ -80,7 +80,7 @@ class MergeSpecification extends Specification {
     def b = [1,3]
     def c = [4,6]
     def d = [3,5]
-    
+
     def lit1 = new LazyMergeIterator(a.iterator(), b.iterator(), new IntComp(), new IntMerger())
     def lit2 = new LazyMergeIterator(c.iterator(), d.iterator(), new IntComp(), new IntMerger())
 

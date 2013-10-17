@@ -1,7 +1,8 @@
 package it.unipd.dei.webqual.converter
 
 import spock.lang.Specification
-import static it.unipd.dei.webqual.converter.ImmutableAdjacencyGraph128.*
+
+import static it.unipd.dei.webqual.converter.Utils.*
 
 class ImmutableAdjacencyGraph128Spec extends Specification {
 
