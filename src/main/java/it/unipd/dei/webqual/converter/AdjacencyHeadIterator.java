@@ -32,7 +32,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
     int read = dis.read(firstNode);
     if (read != idLen || !isHead(firstNode)) {
       throw new NoSuchElementException(
-        "The first id is not the head of an adjacency list");
+        "The first id is not the head of an adjacency list: file " + fileName);
     }
     if(reset) {
       this.next = reset(firstNode);
