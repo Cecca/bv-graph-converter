@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * This class takes as input a set of adjacency list files and merges them
@@ -22,6 +22,9 @@ import java.util.concurrent.TimeUnit;
 public class GraphMerger {
 
   private static final Logger log = LoggerFactory.getLogger(GraphMerger.class);
+
+  private static final ExecutorService executor =
+    Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
   public static final MetricRegistry metrics = new MetricRegistry();
 
@@ -77,17 +80,38 @@ public class GraphMerger {
     return sortedFiles;
   }
 
-  private static File mergeFiles(File[] sortedFiles, File outputName, int groupBy, int idLen, int recursionLevel) throws IOException {
+  /**
+   * Asychronously merges files
+   * @param sortedFiles
+   * @param outputName
+   * @param groupBy
+   * @param idLen
+   * @param recursionLevel
+   * @return
+   * @throws IOException
+   */
+  private static Future<File> mergeFiles( final File[] sortedFiles,
+                                          final File outputName,
+                                          final int groupBy,
+                                          final int idLen,
+                                          final int recursionLevel) throws IOException {
     if(groupBy < 2) {
       throw new IllegalArgumentException("groupBy should be >= 2");
     }
     if(sortedFiles.length <= groupBy) {
       log.info("Recursion level {}. Merging {} files.",
         recursionLevel, sortedFiles.length);
-      return mergeFiles(sortedFiles, outputName, idLen);
+      return
+        executor.submit(new Callable<File>() {
+          @Override
+          public File call() throws Exception {
+            return mergeFiles(sortedFiles, outputName, idLen);
+          }
+        });
     }
 
     File[] tmpFiles = new File[sortedFiles.length / groupBy];
+    Future<File>[] tmpFutures = new Future[tmpFiles.length];
 
     for(int i = 0; i < tmpFiles.length; i++) {
       tmpFiles[i] = File.createTempFile("graph-merger", "merging");
@@ -95,9 +119,19 @@ public class GraphMerger {
       File[] group = Arrays.copyOfRange(
         sortedFiles, i*groupBy, Math.min((i + 1)*groupBy, sortedFiles.length));
 
-      log.info("Recursion level {}. Merging {} out of {} files: {}%",
-        recursionLevel, group.length, sortedFiles.length, (((double) i)/tmpFiles.length)*100);
-      tmpFiles[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen, recursionLevel+1);
+      log.info("Recursion level {}. Merging {} out of {} files.",
+        recursionLevel, group.length, sortedFiles.length);
+      tmpFutures[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen, recursionLevel+1);
+    }
+
+    for (int i = 0; i < tmpFutures.length; i++) {
+      try {
+        log.info("Recursion level {}. Completed partial merging: {}%",
+          recursionLevel, (((double) i)/tmpFiles.length)*100);
+        tmpFiles[i] = tmpFutures[i].get();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     }
 
     log.info("Recursion level {}. Merging temporary files together", recursionLevel);
@@ -157,7 +191,7 @@ public class GraphMerger {
     }
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
 
     Options opts = new Options();
     CmdLineParser parser = new CmdLineParser(opts);
@@ -181,7 +215,9 @@ public class GraphMerger {
     log.info("============= Merging files ===============");
     Timer timer = metrics.timer("total-merging");
     Timer.Context context = timer.time();
-    mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
+    Future<File> mergeFuture =
+      mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
+    mergeFuture.get();
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
 
