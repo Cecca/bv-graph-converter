@@ -168,8 +168,10 @@ public class GraphMerger {
 
     File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen);
 
-    log.info("Checking sorted files");
-    checkFiles(sortedFiles, opts.idLen);
+    if(!opts.noCheck) {
+      log.info("Checking sorted files");
+      checkFiles(sortedFiles, opts.idLen);
+    }
 
     log.info("============= Merging files ===============");
     Timer timer = metrics.timer("total-merging");
@@ -206,6 +208,9 @@ public class GraphMerger {
 
     @Option(name="--no-sort", usage="Skip sorting phase. Input must be already sorted")
     boolean noSort = false;
+
+    @Option(name="--no-check", usage="Skip checking of input files")
+    boolean noCheck = false;
 
   }
 
