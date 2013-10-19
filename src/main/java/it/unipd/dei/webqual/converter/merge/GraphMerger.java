@@ -41,12 +41,12 @@ public class GraphMerger {
     }
 
     Collections.sort(pairs);
-    writePairs(outPath, pairs);
+    writePairs(new File(outPath), pairs);
     long time = context.stop();
-    log.info("{} sorted, elapsed time: {} seconds", inPath, time/1000000000);
+    log.info("{} sorted, elapsed time: {} seconds", inPath, time / 1000000000);
   }
 
-  private static void writeIterator(String outPath, Iterator<Pair> pairs) throws IOException {
+  private static void writeIterator(File outPath, Iterator<Pair> pairs) throws IOException {
     OutputStream out = new BufferedOutputStream(new FileOutputStream(outPath));
     while(pairs.hasNext()) {
       Pair pair = pairs.next();
@@ -58,7 +58,7 @@ public class GraphMerger {
     out.close();
   }
 
-  private static void writePairs(String outPath, List<Pair> pairs)
+  private static void writePairs(File outPath, List<Pair> pairs)
     throws IOException {
     writeIterator(outPath, pairs.iterator());
   }
@@ -77,13 +77,12 @@ public class GraphMerger {
     return sortedFiles;
   }
 
-  private static void mergeFiles(File[] sortedFiles, String outputName, int groupBy, int idLen) throws IOException {
+  private static File mergeFiles(File[] sortedFiles, File outputName, int groupBy, int idLen) throws IOException {
     if(groupBy < 2) {
       throw new IllegalArgumentException("groupBy should be >= 2");
     }
     if(sortedFiles.length <= groupBy) {
-      mergeFiles(sortedFiles, outputName, idLen);
-      return;
+      return mergeFiles(sortedFiles, outputName, idLen);
     }
 
     File[] tmpFiles = new File[sortedFiles.length / groupBy];
@@ -96,18 +95,19 @@ public class GraphMerger {
 
       log.info("Merging {} out of {} files: {}%",
         group.length, sortedFiles.length, (((double) i)/tmpFiles.length)*100);
-      mergeFiles(group, tmpFiles[i].getCanonicalPath(), groupBy, idLen);
+      mergeFiles(group, tmpFiles[i], groupBy, idLen);
     }
 
+    return mergeFiles(tmpFiles, outputName, groupBy, idLen);
   }
 
   /**
    * Creates a single lazy iterator over the merged files and uses it to create
    * the real merge file.
    * @param sortedFiles
-   * @param outputName
+   * @param output
    */
-  private static void mergeFiles(File[] sortedFiles, String outputName, int idLen) throws IOException {
+  private static File mergeFiles(File[] sortedFiles, File output, int idLen) throws IOException {
     Timer timer = metrics.timer("file-merging");
     Timer.Context context = timer.time();
     LazyMergeIterator<Pair>[] iterators = new LazyMergeIterator[sortedFiles.length/2];
@@ -125,10 +125,12 @@ public class GraphMerger {
     }
 
     LazyMergeIterator<Pair> it = LazyMergeIterator.compose(PAIR_COMPARATOR, PAIR_MERGER, iterators);
-    writeIterator(outputName, it);
+    writeIterator(output, it);
 
     long time = context.stop();
     log.info("{} files merged, elapsed time: {} seconds", sortedFiles.length, time/1000000000);
+
+    return output;
   }
 
   private static void checkFiles(File[] sortedFiles, int idLen) throws IOException {
@@ -176,7 +178,7 @@ public class GraphMerger {
     log.info("============= Merging files ===============");
     Timer timer = metrics.timer("total-merging");
     Timer.Context context = timer.time();
-    mergeFiles(sortedFiles, opts.outputName, opts.groupBy, opts.idLen);
+    mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen);
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
 
