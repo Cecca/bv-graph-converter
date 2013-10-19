@@ -80,6 +80,7 @@ public class GraphMerger {
     Timer timer = metrics.timer("total-merging");
     Timer.Context context = timer.time();
     if(sortedFiles.length <= groupBy) {
+      log.info("Performing last merge");
       mergeFiles(sortedFiles, outputName, idLen);
     }
 
@@ -91,7 +92,9 @@ public class GraphMerger {
       File[] group = Arrays.copyOfRange(
         sortedFiles, i*groupBy, Math.min((i + 1)*groupBy, sortedFiles.length));
 
-      mergeFiles(group, tmpFiles[i].getCanonicalPath(), idLen);
+      log.info("Merging {} out of {} files: {}%",
+        group.length, sortedFiles.length, (((double) i)/tmpFiles.length)*100);
+      mergeFiles(group, tmpFiles[i].getCanonicalPath(), groupBy, idLen);
     }
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
@@ -104,7 +107,6 @@ public class GraphMerger {
    * @param outputName
    */
   private static void mergeFiles(File[] sortedFiles, String outputName, int idLen) throws IOException {
-    log.info("Merging {}", Arrays.toString(sortedFiles));
     Timer timer = metrics.timer("file-merging");
     Timer.Context context = timer.time();
     LazyMergeIterator<Pair>[] iterators = new LazyMergeIterator[sortedFiles.length/2];
