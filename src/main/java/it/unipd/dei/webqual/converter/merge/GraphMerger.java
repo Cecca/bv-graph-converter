@@ -3,6 +3,7 @@ package it.unipd.dei.webqual.converter.merge;
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import it.unipd.dei.webqual.converter.AdjacencyHeadIterator;
 import it.unipd.dei.webqual.converter.Utils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -130,6 +131,26 @@ public class GraphMerger {
     log.info("{} files merged, elapsed time: {} seconds", sortedFiles.length, time/1000000000);
   }
 
+  private static void checkFiles(File[] sortedFiles, int idLen) throws IOException {
+    for(File f : sortedFiles) {
+      checkFile(f, idLen);
+    }
+  }
+
+  private static void checkFile(File f, int idLen) throws IOException {
+    ArrayComparator cmp = new ArrayComparator();
+    AdjacencyHeadIterator it =
+      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, true);
+    byte[] last = it.next();
+    while(it.hasNext()) {
+      byte[] cur = it.next();
+      if(cmp.compare(cur, last) < 0) {
+        throw new IllegalArgumentException("File " + f + " is not sorted");
+      }
+      last = cur;
+    }
+  }
+
   public static void main(String[] args) throws IOException {
 
     Options opts = new Options();
@@ -145,6 +166,9 @@ public class GraphMerger {
     File[] inFiles = opts.inputDir.listFiles();
 
     File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen);
+
+    log.info("Checking sorted files");
+    checkFiles(sortedFiles, opts.idLen);
 
     log.info("============= Merging files ===============");
     Timer timer = metrics.timer("total-merging");
