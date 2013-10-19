@@ -77,7 +77,7 @@ public class GraphMerger {
     return sortedFiles;
   }
 
-  private static File mergeFiles(File[] sortedFiles, File outputName, int groupBy, int idLen) throws IOException {
+  private static File mergeFiles(File[] sortedFiles, File outputName, int groupBy, int idLen, int recursionLevel) throws IOException {
     if(groupBy < 2) {
       throw new IllegalArgumentException("groupBy should be >= 2");
     }
@@ -93,12 +93,12 @@ public class GraphMerger {
       File[] group = Arrays.copyOfRange(
         sortedFiles, i*groupBy, Math.min((i + 1)*groupBy, sortedFiles.length));
 
-      log.info("Merging {} out of {} files: {}%",
-        group.length, sortedFiles.length, (((double) i)/tmpFiles.length)*100);
-      tmpFiles[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen);
+      log.info("Recursion level {}. Merging {} out of {} files: {}%",
+        recursionLevel, group.length, sortedFiles.length, (((double) i)/tmpFiles.length)*100);
+      tmpFiles[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen, recursionLevel+1);
     }
 
-    return mergeFiles(tmpFiles, outputName, groupBy, idLen);
+    return mergeFiles(tmpFiles, outputName, groupBy, idLen, recursionLevel+1);
   }
 
   /**
@@ -178,7 +178,7 @@ public class GraphMerger {
     log.info("============= Merging files ===============");
     Timer timer = metrics.timer("total-merging");
     Timer.Context context = timer.time();
-    mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen);
+    mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
 
