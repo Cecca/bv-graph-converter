@@ -45,17 +45,21 @@ public class GraphMerger {
     log.info("{} sorted, elapsed time: {} seconds", inPath, time/1000000000);
   }
 
-  private static void writePairs(String outPath, List<Pair> pairs)
-    throws IOException {
-
+  private static void writeIterator(String outPath, Iterator<Pair> pairs) throws IOException {
     OutputStream out = new BufferedOutputStream(new FileOutputStream(outPath));
-    for(Pair pair : pairs) {
+    while(pairs.hasNext()) {
+      Pair pair = pairs.next();
       out.write(Utils.setHead(pair.head));
       for(byte[] neigh : pair.neighbours) {
         out.write(neigh);
       }
     }
     out.close();
+  }
+
+  private static void writePairs(String outPath, List<Pair> pairs)
+    throws IOException {
+    writeIterator(outPath, pairs.iterator());
   }
 
   private static File[] sortFiles(File[] inFiles, int idLen) throws IOException {
@@ -76,11 +80,7 @@ public class GraphMerger {
     if(groupBy < 2) {
       throw new IllegalArgumentException("groupBy should be >= 2");
     }
-    log.info("============= Merging files ===============");
-    Timer timer = metrics.timer("total-merging");
-    Timer.Context context = timer.time();
     if(sortedFiles.length <= groupBy) {
-      log.info("Performing last merge");
       mergeFiles(sortedFiles, outputName, idLen);
     }
 
@@ -96,8 +96,7 @@ public class GraphMerger {
         group.length, sortedFiles.length, (((double) i)/tmpFiles.length)*100);
       mergeFiles(group, tmpFiles[i].getCanonicalPath(), groupBy, idLen);
     }
-    long time = context.stop();
-    log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
+
   }
 
   /**
@@ -124,16 +123,8 @@ public class GraphMerger {
     }
 
     LazyMergeIterator<Pair> it = LazyMergeIterator.compose(PAIR_COMPARATOR, PAIR_MERGER, iterators);
-
-    OutputStream out = new BufferedOutputStream(new FileOutputStream(outputName));
-    while(it.hasNext()) {
-      Pair pair = it.next();
-      out.write(Utils.setHead(pair.head));
-      for(byte[] neigh : pair.neighbours) {
-        out.write(neigh);
-      }
-    }
-    out.close();
+    writeIterator(outputName, it);
+    
     long time = context.stop();
     log.info("{} files merged, elapsed time: {} seconds", sortedFiles.length, time/1000000000);
   }
@@ -154,7 +145,13 @@ public class GraphMerger {
 
     File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen);
 
+    log.info("============= Merging files ===============");
+    Timer timer = metrics.timer("total-merging");
+    Timer.Context context = timer.time();
     mergeFiles(sortedFiles, opts.outputName, opts.groupBy, opts.idLen);
+    long time = context.stop();
+    log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
+
 
     log.info("{} duplicates have been merged", metrics.counter("duplicates").getCount());
 
