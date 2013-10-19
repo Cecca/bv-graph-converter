@@ -82,6 +82,7 @@ public class GraphMerger {
     }
     if(sortedFiles.length <= groupBy) {
       mergeFiles(sortedFiles, outputName, idLen);
+      return;
     }
 
     File[] tmpFiles = new File[sortedFiles.length / groupBy];
@@ -124,7 +125,7 @@ public class GraphMerger {
 
     LazyMergeIterator<Pair> it = LazyMergeIterator.compose(PAIR_COMPARATOR, PAIR_MERGER, iterators);
     writeIterator(outputName, it);
-    
+
     long time = context.stop();
     log.info("{} files merged, elapsed time: {} seconds", sortedFiles.length, time/1000000000);
   }
