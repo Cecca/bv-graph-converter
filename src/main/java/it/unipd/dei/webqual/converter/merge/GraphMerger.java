@@ -132,8 +132,9 @@ public class GraphMerger {
   }
 
   private static void checkFiles(File[] sortedFiles, int idLen) throws IOException {
-    for(File f : sortedFiles) {
-      checkFile(f, idLen);
+    for(int i=0; i<sortedFiles.length; i++) {
+      System.out.printf("%f%%\r", ((double) i)/sortedFiles.length * 100);
+      checkFile(sortedFiles[i], idLen);
     }
   }
 
