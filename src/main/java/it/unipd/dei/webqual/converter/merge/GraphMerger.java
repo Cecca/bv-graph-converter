@@ -82,6 +82,8 @@ public class GraphMerger {
       throw new IllegalArgumentException("groupBy should be >= 2");
     }
     if(sortedFiles.length <= groupBy) {
+      log.info("Recursion level {}. Merging {} files.",
+        recursionLevel, sortedFiles.length);
       return mergeFiles(sortedFiles, outputName, idLen);
     }
 
@@ -98,6 +100,7 @@ public class GraphMerger {
       tmpFiles[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen, recursionLevel+1);
     }
 
+    log.info("Recursion level {}. Merging temporary files together", recursionLevel);
     return mergeFiles(tmpFiles, outputName, groupBy, idLen, recursionLevel+1);
   }
 
