@@ -95,7 +95,7 @@ public class GraphMerger {
 
       log.info("Merging {} out of {} files: {}%",
         group.length, sortedFiles.length, (((double) i)/tmpFiles.length)*100);
-      mergeFiles(group, tmpFiles[i], groupBy, idLen);
+      tmpFiles[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen);
     }
 
     return mergeFiles(tmpFiles, outputName, groupBy, idLen);
