@@ -5,7 +5,7 @@ apply plugin: 'findbugs'
 apply plugin: 'application'
 apply plugin: 'groovy'
 
-mainClassName = "it.unipd.dei.webqual.converter.merge.Main"
+mainClassName = "it.unipd.dei.webqual.converter.Main"
 
 repositories {
   mavenCentral()
