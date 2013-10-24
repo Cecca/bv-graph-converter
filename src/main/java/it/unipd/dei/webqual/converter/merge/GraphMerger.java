@@ -41,9 +41,21 @@ public class GraphMerger {
     }
 
     Collections.sort(pairs);
-    writePairs(new File(outPath), pairs);
+
+    // remove duplicates from the collection itself
+    Iterator<Pair> deduplicated = removeLocalDuplicates(pairs);
+
+    writeIterator(new File(outPath), deduplicated);
     long time = context.stop();
     log.info("{} sorted, elapsed time: {} seconds", inPath, time / 1000000000);
+  }
+
+  private static Iterator<Pair> removeLocalDuplicates(List<Pair> pairs) {
+    Iterator<Pair>
+      first = pairs.iterator(),
+      second = pairs.iterator();
+
+    return new LazyMergeIterator<>(first, second, PAIR_COMPARATOR, PAIR_MERGER);
   }
 
   private static void writeIterator(File outPath, Iterator<Pair> pairs) throws IOException {
