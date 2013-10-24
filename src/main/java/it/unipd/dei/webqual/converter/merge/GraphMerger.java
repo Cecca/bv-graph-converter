@@ -172,6 +172,20 @@ public class GraphMerger {
     }
   }
 
+  private static void checkDuplicates(File f, int idLen) throws IOException {
+    ArrayComparator cmp = new ArrayComparator();
+    AdjacencyHeadIterator it =
+      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, true);
+    byte[] last = it.next();
+    while(it.hasNext()) {
+      byte[] cur = it.next();
+      if(cmp.compare(cur, last) == 0) {
+        throw new IllegalArgumentException("File " + f + " contains duplicates");
+      }
+      last = cur;
+    }
+  }
+
   public static void main(String[] args) throws IOException, InterruptedException {
 
     Options opts = new Options();
@@ -188,7 +202,7 @@ public class GraphMerger {
 
     File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen);
 
-    if(!opts.noCheck) {
+    if(!opts.noCheckSort) {
       log.info("Checking sorted files");
       checkFiles(sortedFiles, opts.idLen);
     }
@@ -196,12 +210,17 @@ public class GraphMerger {
     log.info("============= Merging files ===============");
     Timer timer = metrics.timer("total-merging");
     Timer.Context context = timer.time();
-    mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
+    File outFile = mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
 
 
     log.info("{} duplicates have been merged", metrics.counter("duplicates").getCount());
+
+    if(!opts.noCheckDup) {
+      log.info("Checking for duplicates in output");
+      checkDuplicates(outFile, opts.idLen);
+    }
 
     CsvReporter reporter = CsvReporter.forRegistry(metrics)
                                       .formatFor(Locale.ITALY)
@@ -229,8 +248,11 @@ public class GraphMerger {
     @Option(name="--no-sort", usage="Skip sorting phase. Input must be already sorted")
     boolean noSort = false;
 
-    @Option(name="--no-check", usage="Skip checking of input files")
-    boolean noCheck = false;
+    @Option(name="--no-check-sort", usage="Skip checking of input files")
+    boolean noCheckSort = false;
+
+    @Option(name="--no-check-duplicate", usage="Skip checking of input files")
+    boolean noCheckDup = false;
 
   }
 
