@@ -2,10 +2,15 @@ package it.unipd.dei.webqual.converter;
 
 import it.unimi.dsi.big.webgraph.ImmutableGraph;
 import it.unimi.dsi.big.webgraph.ImmutableSequentialGraph;
+import it.unimi.dsi.big.webgraph.NodeIterator;
+import it.unimi.dsi.fastutil.longs.LongBigArrays;
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unimi.dsi.sux4j.mph.MinimalPerfectHashFunction;
 
-import java.io.IOException;
+import java.io.*;
+import java.util.NoSuchElementException;
+
+import static it.unipd.dei.webqual.converter.Utils.isHead;
 
 public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
 
@@ -75,6 +80,91 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
 
   public static void main(String[] args) throws IOException {
     ImmutableAdjacencyGraph.loadOffline("links.0", 16, new ProgressLogger());
+  }
+
+  public NodeIterator nodeIterator() {
+    try {
+      return new NodeIterator() {
+
+        final DataInputStream dis = new DataInputStream(
+          new BufferedInputStream(new FileInputStream(filename)));
+        long outdegree;
+        long[][] successors = LongBigArrays.EMPTY_BIG_ARRAY;
+        long nextId = -1;
+
+        {
+          byte[] firstId = new byte[idLen];
+          dis.read(firstId);
+          if(!isHead(firstId)) {
+            throw new NoSuchElementException(
+              "The first element of the file is not a head");
+          }
+          nextId = map.getLong(firstId);
+        }
+
+        @Override
+        public long nextLong() {
+          if(!hasNext()) throw new NoSuchElementException();
+          successors = LongBigArrays.ensureCapacity(successors, 10000); // magic number! tweak for efficiency
+          outdegree = 0;
+          long currentId = nextId;
+
+          try {
+            // now read the adjacency
+            byte[] buf = new byte[idLen];
+            while(dis.available() > 0) {
+              dis.read(buf);
+              // assign the next long if we are on a head
+              if(isHead(buf)) {
+                nextId = map.getLong(buf);
+                break;
+              } else {
+                long mapped = map.getLong(buf);
+                if(mapped >= 0) {
+                  LongBigArrays.set(successors, outdegree++, mapped);
+                }
+              }
+            }
+
+            successors = LongBigArrays.trim(successors, outdegree);
+
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+
+          return currentId;
+        }
+
+        @Override
+        public long[][] successorBigArray() {
+          return successors;
+        }
+
+        @Override
+        public long outdegree() {
+          return outdegree;
+        }
+
+        @Override
+        public boolean hasNext() {
+          try {
+            return dis.available() > 0;
+          } catch (IOException e) {
+            return false;
+          }
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+          dis.close();
+          super.finalize();
+        }
+      };
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
 }

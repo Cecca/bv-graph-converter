@@ -39,10 +39,6 @@ public class Main {
     System.out.println("Number of nodes: " + efGraph.numNodes());
     System.out.println("Number of arcs: " + efGraph.numArcs());
 
-    System.out.println(
-      "==== Converting the graph to Boldi-Vigna format: output " + bvOut);
-    BVGraph.store(efGraph, bvOut, pl);
-
   }
 
 }
