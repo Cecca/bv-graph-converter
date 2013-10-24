@@ -57,6 +57,22 @@ class MergeSpecification extends Specification {
     merged == [1,2,3,4,5,6,7,8,9,10,11]
   }
 
+  def "Merged iterators contain no duplicates, even when duplicates are in the input list" () {
+    setup:
+    def a = [1,2,3,4,5,6,7,8]
+    def b = [3,4,5,6,7,7,7,8,9,10,11]
+    def lit = new LazyMergeIterator(a.iterator(), b.iterator(), new IntComp(), new IntMerger())
+
+    when:
+    def merged = []
+    while(lit.hasNext()) {
+      merged.add(lit.next())
+    }
+
+    then:
+    merged == [1,2,3,4,5,6,7,8,9,10,11]
+  }
+
   def "Merged iterators contain no duplicates with byte arrays" () {
     setup:
     def rnd = new Random()

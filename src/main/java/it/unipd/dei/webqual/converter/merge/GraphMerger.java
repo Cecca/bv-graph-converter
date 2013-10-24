@@ -180,7 +180,9 @@ public class GraphMerger {
     while(it.hasNext()) {
       byte[] cur = it.next();
       if(cmp.compare(cur, last) == 0) {
-        throw new IllegalArgumentException("File " + f + " contains duplicates");
+        throw new IllegalArgumentException(
+          "File " + f + " contains duplicates: \n\t"+Arrays.toString(last) +
+          "\n\t" + Arrays.toString(cur));
       }
       last = cur;
     }
