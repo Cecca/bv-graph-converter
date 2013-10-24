@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class takes as input a set of adjacency list files and merges them
@@ -22,9 +22,6 @@ import java.util.concurrent.*;
 public class GraphMerger {
 
   private static final Logger log = LoggerFactory.getLogger(GraphMerger.class);
-
-  private static final ExecutorService executor =
-    Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
   public static final MetricRegistry metrics = new MetricRegistry();
 
@@ -90,7 +87,7 @@ public class GraphMerger {
    * @return
    * @throws IOException
    */
-  private static Future<File> mergeFiles( final File[] sortedFiles,
+  private static File mergeFiles( final File[] sortedFiles,
                                           final File outputName,
                                           final int groupBy,
                                           final int idLen,
@@ -101,17 +98,11 @@ public class GraphMerger {
     if(sortedFiles.length <= groupBy) {
       log.info("Recursion level {}. Merging {} files.",
         recursionLevel, sortedFiles.length);
-      return
-        executor.submit(new Callable<File>() {
-          @Override
-          public File call() throws Exception {
-            return mergeFiles(sortedFiles, outputName, idLen);
-          }
-        });
+      return mergeFiles(sortedFiles, outputName, idLen);
     }
 
     File[] tmpFiles = new File[sortedFiles.length / groupBy];
-    Future<File>[] tmpFutures = new Future[tmpFiles.length];
+    File[] tmpFutures = new File[tmpFiles.length];
 
     for(int i = 0; i < tmpFiles.length; i++) {
       tmpFiles[i] = File.createTempFile("graph-merger", "merging");
@@ -121,17 +112,7 @@ public class GraphMerger {
 
       log.info("Recursion level {}. Merging {} out of {} files.",
         recursionLevel, group.length, sortedFiles.length);
-      tmpFutures[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen, recursionLevel+1);
-    }
-
-    for (int i = 0; i < tmpFutures.length; i++) {
-      try {
-        log.info("Recursion level {}. Completed partial merging: {}%",
-          recursionLevel, (((double) i)/tmpFiles.length)*100);
-        tmpFiles[i] = tmpFutures[i].get();
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
+      tmpFiles[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen, recursionLevel+1);
     }
 
     log.info("Recursion level {}. Merging temporary files together", recursionLevel);
@@ -191,7 +172,7 @@ public class GraphMerger {
     }
   }
 
-  public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
+  public static void main(String[] args) throws IOException, InterruptedException {
 
     Options opts = new Options();
     CmdLineParser parser = new CmdLineParser(opts);
@@ -215,9 +196,7 @@ public class GraphMerger {
     log.info("============= Merging files ===============");
     Timer timer = metrics.timer("total-merging");
     Timer.Context context = timer.time();
-    Future<File> mergeFuture =
-      mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
-    mergeFuture.get();
+    mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
 
