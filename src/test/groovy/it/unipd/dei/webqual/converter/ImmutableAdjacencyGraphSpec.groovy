@@ -7,7 +7,7 @@ import spock.lang.Specification
 
 import static it.unipd.dei.webqual.converter.Utils.*
 
-class ImmutableAdjacencyGraph64Spec extends Specification {
+class ImmutableAdjacencyGraphSpec extends Specification {
 
   def writeGraph(graph, filename) {
     def out = new DataOutputStream(new FileOutputStream(filename))
@@ -31,7 +31,7 @@ class ImmutableAdjacencyGraph64Spec extends Specification {
                 , [2L, 0L, 3L]
                 , [3L, 0L, 2L]]
     writeGraph(graph, filename)
-    def ig = ImmutableAdjacencyGraph64.loadOffline(filename)
+    def ig = ImmutableAdjacencyGraph.loadOffline(filename, 8, null)
     BVGraph.store(ig, filename+"-bv")
     def bvg = BVGraph.load(filename+"-bv")
 
@@ -57,7 +57,7 @@ class ImmutableAdjacencyGraph64Spec extends Specification {
             , [1L, 0L]
             , [3L, 0L, 2L]]
     writeGraph(graph, filename)
-    def ig = ImmutableAdjacencyGraph64.loadOffline(filename)
+    def ig = ImmutableAdjacencyGraph.loadOffline(filename, 8, null)
     EFGraph.store(ig, filename+"-ef")
     def efg = EFGraph.load(filename+"-ef")
     BVGraph.store(efg,filename+"-bv")
@@ -88,7 +88,7 @@ class ImmutableAdjacencyGraph64Spec extends Specification {
                 , [3L, 0L, 2L]
                 , [2L, 0L, 3L]]
     writeGraph(graph, filename)
-    def ig = ImmutableAdjacencyGraph64.loadOffline(filename)
+    def ig = ImmutableAdjacencyGraph.loadOffline(filename, 8, null)
     EFGraph.store(ig, filename+"-ef")
     def efg = EFGraph.load(filename+"-ef")
     BVGraph.store(efg,filename+"-bv")
