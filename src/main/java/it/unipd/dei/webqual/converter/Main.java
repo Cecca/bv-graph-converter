@@ -18,7 +18,8 @@ public class Main {
     String outBasename = args[1];
 
     System.out.println("==== Loading graph from " + inputFile);
-    Function<byte[], Long> map = FunctionFactory.buildMphf(inputFile, 16, new ProgressLogger());
+    Function<byte[], Long> map =
+      FunctionFactory.buildLcpMonotoneMph(inputFile, 16, new ProgressLogger());
     ImmutableGraph iag =
       ImmutableAdjacencyGraph.loadOffline(inputFile, 16, map, new ProgressLogger());
     System.out.println("Loaded graph with " + iag.numNodes() + " nodes");
