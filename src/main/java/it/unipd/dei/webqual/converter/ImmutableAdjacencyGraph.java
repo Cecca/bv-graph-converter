@@ -3,9 +3,9 @@ package it.unipd.dei.webqual.converter;
 import it.unimi.dsi.big.webgraph.ImmutableGraph;
 import it.unimi.dsi.big.webgraph.ImmutableSequentialGraph;
 import it.unimi.dsi.big.webgraph.NodeIterator;
+import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.longs.LongBigArrays;
 import it.unimi.dsi.logging.ProgressLogger;
-import it.unimi.dsi.sux4j.mph.MinimalPerfectHashFunction;
 
 import java.io.*;
 import java.util.NoSuchElementException;
@@ -23,30 +23,21 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
   /** The number of nodes of the graph. */
   private final long numNodes;
 
-  private final MinimalPerfectHashFunction<byte[]> map;
+  private final Function<byte[], Long> map;
 
   private final ProgressLogger pl;
 
-  private ImmutableAdjacencyGraph(CharSequence filename, int idLen, ProgressLogger pl) {
+  private ImmutableAdjacencyGraph( CharSequence filename,
+                                   int idLen,
+                                   Function<byte[], Long> mapFunction,
+                                   ProgressLogger pl) {
     this.idLen = idLen;
     this.filename = filename.toString();
     this.pl = pl;
+    this.map = mapFunction;
+    this.numNodes = mapFunction.size();
 
-    try {
-      pl.start("Counting nodes and creating perfect hash function");
-      AdjacencyHeads heads = new AdjacencyHeads(this.filename, idLen);
-      ByteArrayTransformationStrategy trStrat =
-        new ByteArrayTransformationStrategy(idLen);
-
-      this.map = new MinimalPerfectHashFunction<byte[]>(heads, trStrat);
-
-      this.numNodes = heads.getCount();
-
-      pl.logger().info("Loaded graph with {} nodes.", this.numNodes);
-      pl.logger().info("The perfect hash function is using {} bits", map.numBits());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    pl.logger().info("Loaded graph with {} nodes.", this.numNodes);
   }
 
   @Override
@@ -70,16 +61,12 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
     return load( basename, null );
   }
 
-  public static ImmutableGraph loadOffline( final CharSequence basename, final int idLen, final ProgressLogger pl ) throws IOException {
-    return new ImmutableAdjacencyGraph( basename, idLen, pl );
+  public static ImmutableGraph loadOffline( final CharSequence basename, final int idLen, final Function<byte[], Long> mapFunction, final ProgressLogger pl ) throws IOException {
+    return new ImmutableAdjacencyGraph( basename, idLen, mapFunction, pl );
   }
 
   public static ImmutableGraph loadOffline( final CharSequence basename ) throws IOException {
-    return loadOffline( basename, 16, null );
-  }
-
-  public static void main(String[] args) throws IOException {
-    ImmutableAdjacencyGraph.loadOffline("links.0", 16, new ProgressLogger());
+    return loadOffline( basename, 16, FunctionFactory.buildMphf(basename.toString(), 16, null), null );
   }
 
   public NodeIterator nodeIterator() {
@@ -99,7 +86,7 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
             throw new NoSuchElementException(
               "The first element of the file is not a head");
           }
-          nextId = map.getLong(firstId);
+          nextId = map.get(firstId);
         }
 
         @Override
@@ -117,14 +104,14 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
               dis.read(buf);
               // assign the next long if we are on a head
               if(isHead(buf)) {
-                nextId = map.getLong(buf);
+                nextId = map.get(buf);
                 break;
               } else {
-                long mapped = map.getLong(buf);
+                long mapped = map.get(buf);
                 if(mapped >= 0 && mapped < numNodes) {
                   LongBigArrays.set(successors, outdegree++, mapped);
                 } else {
-                  pl.logger().info("Neighbour "+mapped+" of "+currentId+" out of range, skipping");
+                  pl.logger().info("Neighbour " + mapped + " of " + currentId + " out of range, skipping");
                 }
               }
             }

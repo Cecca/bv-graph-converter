@@ -1,6 +1,7 @@
 package it.unipd.dei.webqual.converter;
 
 import it.unimi.dsi.big.webgraph.*;
+import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
 
 import java.io.IOException;
@@ -17,8 +18,9 @@ public class Main {
     String outBasename = args[1];
 
     System.out.println("==== Loading graph from " + inputFile);
+    Function<byte[], Long> map = FunctionFactory.buildMphf(inputFile, 16, new ProgressLogger());
     ImmutableGraph iag =
-      ImmutableAdjacencyGraph.loadOffline(inputFile, 16, new ProgressLogger());
+      ImmutableAdjacencyGraph.loadOffline(inputFile, 16, map, new ProgressLogger());
     System.out.println("Loaded graph with " + iag.numNodes() + " nodes");
 
 

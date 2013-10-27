@@ -13,7 +13,8 @@ public class FunctionFactory {
   public static MinimalPerfectHashFunction<byte[]> buildMphf( String file,
                                                               int idLen,
                                                               ProgressLogger pl) throws IOException {
-    pl.start("Counting nodes and creating perfect hash function");
+    if(pl != null)
+      pl.start("Counting nodes and creating perfect hash function");
     AdjacencyHeads heads = new AdjacencyHeads(file, idLen);
     ByteArrayTransformationStrategy trStrat =
       new ByteArrayTransformationStrategy(idLen);
@@ -27,7 +28,8 @@ public class FunctionFactory {
           "of elements counted by the  minimal perfect hash function");
     }
 
-    pl.logger().info("The perfect hash function is using {} bits", mph.numBits());
+    if(pl != null)
+      pl.logger().info("The perfect hash function is using {} bits", mph.numBits());
     return mph;
   }
 
