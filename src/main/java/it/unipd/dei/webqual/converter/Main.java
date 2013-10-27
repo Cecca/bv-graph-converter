@@ -35,22 +35,17 @@ public class Main {
     System.out.println("Number of nodes: " + efGraph.numNodes());
     System.out.println("Number of arcs: " + efGraph.numArcs());
 
-//    String bvOut = outBasename + "-bv";
-//    System.out.println(
-//      "==== Converting the graph to Boldi-Vigna format: output " + bvOut);
-//    BVGraph.store(iag, bvOut, pl);
-//
-//    ImmutableGraph bvGraph = BVGraph.loadOffline(bvOut);
-//
-//    System.out.println("==== Statistics ====");
-//    System.out.println("Number of nodes: " + bvGraph.numNodes());
-//    System.out.println("Number of arcs: " + bvGraph.numArcs());
+    System.out.println("==== Checking for errors ====");
+//    checkForOutOfRange(efGraph);
 
-    checkForOutOfRange(iag);
+    if(!iag.equals(efGraph)) {
+      System.out.println("Graphs are not equal!!!");
+      System.out.println(efGraph.numNodes() + " ?= " + iag.numNodes());
+      checkSuccessors((ImmutableAdjacencyGraph) iag, (EFGraph) efGraph);
+    }
   }
 
   public static void checkForOutOfRange(ImmutableGraph g) {
-    System.out.println("==== Checking for errors ====");
     NodeIterator ni = g.nodeIterator();
     while(ni.hasNext()) {
       long node = ni.next();
@@ -65,6 +60,24 @@ public class Main {
       }
     }
     System.out.println("Check completed, no errors found");
+  }
+
+  public static void checkSuccessors(ImmutableAdjacencyGraph a, EFGraph b) {
+    long totNodes = a.numNodes();
+    NodeIterator ai = a.nodeIterator();
+    LazyLongIterator succA, succB;
+    long outDegA, outDegB;
+    while(ai.hasNext()) {
+      long node = ai.next();
+      succA = ai.successors();
+      outDegA = ai.outdegree();
+      succB = b.successors(node);
+      outDegB = b.outdegree(node);
+      if (outDegA != outDegB) {
+        throw new RuntimeException(
+          "Outdegree of node " + node + " is different in the two graphs: IAG="+outDegA+" EFGraph="+outDegB);
+      }
+    }
   }
 
 }

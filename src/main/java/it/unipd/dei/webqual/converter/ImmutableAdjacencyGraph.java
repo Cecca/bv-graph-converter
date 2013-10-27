@@ -105,6 +105,7 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
         @Override
         public long nextLong() {
           if(!hasNext()) throw new NoSuchElementException();
+          successors = LongBigArrays.EMPTY_BIG_ARRAY;
           successors = LongBigArrays.ensureCapacity(successors, 10000); // magic number! tweak for efficiency
           outdegree = 0;
           long currentId = nextId;
