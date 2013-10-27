@@ -1,8 +1,6 @@
 package it.unipd.dei.webqual.converter;
 
-import it.unimi.dsi.big.webgraph.BVGraph;
-import it.unimi.dsi.big.webgraph.EFGraph;
-import it.unimi.dsi.big.webgraph.ImmutableGraph;
+import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.logging.ProgressLogger;
 
 import java.io.IOException;
@@ -31,14 +29,42 @@ public class Main {
       "==== Converting the graph to Elias-Fano format: output " + efOut);
     EFGraph.store(iag, efOut, pl);
 
-    pl = new ProgressLogger();
-    String bvOut = outBasename + "-bv";
-    ImmutableGraph efGraph = EFGraph.load(efOut);
+    ImmutableGraph efGraph = EFGraph.loadOffline(efOut);
 
     System.out.println("==== Statistics ====");
     System.out.println("Number of nodes: " + efGraph.numNodes());
     System.out.println("Number of arcs: " + efGraph.numArcs());
 
+//    String bvOut = outBasename + "-bv";
+//    System.out.println(
+//      "==== Converting the graph to Boldi-Vigna format: output " + bvOut);
+//    BVGraph.store(iag, bvOut, pl);
+//
+//    ImmutableGraph bvGraph = BVGraph.loadOffline(bvOut);
+//
+//    System.out.println("==== Statistics ====");
+//    System.out.println("Number of nodes: " + bvGraph.numNodes());
+//    System.out.println("Number of arcs: " + bvGraph.numArcs());
+
+    checkForOutOfRange(iag);
+  }
+
+  public static void checkForOutOfRange(ImmutableGraph g) {
+    System.out.println("==== Checking for errors ====");
+    NodeIterator ni = g.nodeIterator();
+    while(ni.hasNext()) {
+      long node = ni.next();
+      LazyLongIterator succs = ni.successors();
+      long outDegree = ni.outdegree();
+      while(outDegree-- > 0) {
+        long succ = succs.nextLong();
+        if(succ < 0 || succ > g.numNodes()) {
+          throw new RuntimeException(
+            String.format("Out of bounds neighbour: %d of node %d", succ, node));
+        }
+      }
+    }
+    System.out.println("Check completed, no errors found");
   }
 
 }

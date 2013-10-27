@@ -120,8 +120,10 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
                 break;
               } else {
                 long mapped = map.getLong(buf);
-                if(mapped >= 0) {
+                if(mapped >= 0 && mapped < numNodes) {
                   LongBigArrays.set(successors, outdegree++, mapped);
+                } else {
+                  pl.logger().info("Neighbour "+mapped+" of "+currentId+" out of range, skipping");
                 }
               }
             }
