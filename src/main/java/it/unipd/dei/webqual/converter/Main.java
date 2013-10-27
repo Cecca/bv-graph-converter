@@ -14,41 +14,40 @@ public class Main {
       System.exit(1);
     }
 
+    ProgressLogger pl = new ProgressLogger();
+
     String inputFile = args[0];
     String outBasename = args[1];
 
-    System.out.println("==== Loading graph from " + inputFile);
+    pl.logger().info("==== Loading graph from " + inputFile);
     Function<byte[], Long> map =
-      FunctionFactory.buildLcpMonotoneMph(inputFile, 16, new ProgressLogger());
+      FunctionFactory.buildLcpMonotoneMph(inputFile, 16, pl);
     ImmutableGraph iag =
-      ImmutableAdjacencyGraph.loadOffline(inputFile, 16, map, new ProgressLogger());
-    System.out.println("Loaded graph with " + iag.numNodes() + " nodes");
-
-
-    ProgressLogger pl = new ProgressLogger();
+      ImmutableAdjacencyGraph.loadOffline(inputFile, 16, map, pl);
+    pl.logger().info("Loaded graph with " + iag.numNodes() + " nodes");
 
     String efOut = outBasename + "-ef";
-    System.out.println(
+    pl.logger().info(
       "==== Converting the graph to Elias-Fano format: output " + efOut);
     EFGraph.store(iag, efOut, pl);
 
     ImmutableGraph efGraph = EFGraph.loadOffline(efOut);
 
-    System.out.println("==== Statistics ====");
-    System.out.println("Number of nodes: " + efGraph.numNodes());
-    System.out.println("Number of arcs: " + efGraph.numArcs());
+    pl.logger().info("==== Statistics ====");
+    pl.logger().info("Number of nodes: " + efGraph.numNodes());
+    pl.logger().info("Number of arcs: " + efGraph.numArcs());
 
-    System.out.println("==== Checking for errors ====");
+    pl.logger().info("==== Checking for errors ====");
 //    checkForOutOfRange(efGraph);
 
     if(!iag.equals(efGraph)) {
-      System.out.println("Graphs are not equal!!!");
-      System.out.println(efGraph.numNodes() + " ?= " + iag.numNodes());
+      pl.logger().error("Graphs are not equal!!!");
+      pl.logger().info(efGraph.numNodes() + " ?= " + iag.numNodes());
       checkSuccessors((ImmutableAdjacencyGraph) iag, (EFGraph) efGraph);
     }
   }
 
-  public static void checkForOutOfRange(ImmutableGraph g) {
+  public static void checkForOutOfRange(ImmutableGraph g, ProgressLogger pl) {
     NodeIterator ni = g.nodeIterator();
     while(ni.hasNext()) {
       long node = ni.next();
@@ -62,7 +61,7 @@ public class Main {
         }
       }
     }
-    System.out.println("Check completed, no errors found");
+    pl.logger().info("Check completed, no errors found");
   }
 
   public static void checkSuccessors(ImmutableAdjacencyGraph a, EFGraph b) {

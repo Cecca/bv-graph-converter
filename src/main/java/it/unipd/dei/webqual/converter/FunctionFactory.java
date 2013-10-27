@@ -83,8 +83,8 @@ public class FunctionFactory {
   }
 
   public static LcpMonotoneMinimalPerfectHashFunction<byte[]> buildLcpMonotoneMph( String file,
-                                                                                                                       int idLen,
-                                                                                                                       ProgressLogger pl) throws IOException {
+                                                                                   int idLen,
+                                                                                   ProgressLogger pl) throws IOException {
     if(pl != null)
       pl.start("Counting nodes and creating perfect hash function");
     AdjacencyHeads heads = new AdjacencyHeads(file, idLen, true);
