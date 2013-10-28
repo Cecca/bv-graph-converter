@@ -21,7 +21,7 @@ public class Main {
 
     pl.logger().info("==== Loading graph from " + inputFile);
     Function<byte[], Long> map =
-      FunctionFactory.buildLcpMonotoneMph(inputFile, 16, pl);
+      FunctionFactory.buildDeterministicMap(inputFile, 16, pl);
     ImmutableGraph iag =
       ImmutableAdjacencyGraph.loadOffline(inputFile, 16, map, pl);
     pl.logger().info("Loaded graph with " + iag.numNodes() + " nodes");
@@ -38,8 +38,6 @@ public class Main {
     pl.logger().info("Number of arcs: " + efGraph.numArcs());
 
     pl.logger().info("==== Checking for errors ====");
-//    checkForOutOfRange(efGraph);
-
     if(!iag.equals(efGraph)) {
       pl.logger().error("Graphs are not equal!!!");
       pl.logger().info(efGraph.numNodes() + " ?= " + iag.numNodes());

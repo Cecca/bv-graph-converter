@@ -1,12 +1,15 @@
 package it.unipd.dei.webqual.converter;
 
 import it.unimi.dsi.bits.TransformationStrategy;
+import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unimi.dsi.sux4j.mph.*;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Contains factory methods for various types of functions
@@ -103,6 +106,62 @@ public class FunctionFactory {
     if(pl != null)
       pl.logger().info("The perfect hash function is using {} bits", mph.numBits());
     return mph;
+  }
+
+  public static ByteArray2LongFunction buildDeterministicMap( String file,
+                                                              int idLen,
+                                                              ProgressLogger pl) throws IOException {
+    if(pl != null)
+      pl.displayFreeMemory = true;
+    if(pl != null)
+      pl.start("Building the deterministic map, with increasing IDs");
+
+    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, true);
+    ByteArray2LongFunction map = new ByteArray2LongFunction();
+
+    long cnt = 0;
+    for(byte[] head : heads) {
+      map.put(head, cnt);
+      cnt++;
+    }
+
+    if(map.size() != heads.getCount()) {
+      throw new IllegalStateException(
+        "Number of elements counted by the iterator is different than the number " +
+          "of elements counted by the  minimal perfect hash function");
+    }
+
+    if(pl != null)
+      pl.stop("Populated map with " +  map.size() +" elements");
+
+    return map;
+  }
+
+  public static void main(String[] args) throws IOException {
+    Function<byte[], Long> map = buildDeterministicMap("merged", 16, new ProgressLogger());
+    AdjacencyHeadIterator it = new AdjacencyHeadIterator("merged", 16, true);
+
+    int errCnt = 0;
+    int totArcs = 0;
+    while(it.hasNext()) {
+      byte[] elem = it.next();
+      long id = map.get(elem);
+      if(id < 0)
+        throw new RuntimeException(Arrays.toString(elem) + " has no associated id");
+      List<byte[]> neighs = it.neighbours();
+      totArcs += neighs.size();
+      int neighCount = 0;
+      for(byte[] neigh : neighs) {
+        long nId = map.get(neigh);
+        if(nId < 0) {
+//          throw new RuntimeException("\n"+Arrays.toString(neigh) + ", neighbour " + neighCount + "/" + neighs.size() + " of\n" +
+//            Arrays.toString(elem) + " : " + id + " has no associated id");
+          errCnt++;
+        }
+        neighCount++;
+      }
+    }
+    System.out.println("Error count: " + errCnt + " over " + totArcs + " = " + ((double)errCnt/totArcs*100) + "%");
   }
 
 }

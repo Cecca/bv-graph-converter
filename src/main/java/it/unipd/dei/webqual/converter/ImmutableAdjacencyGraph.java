@@ -111,7 +111,7 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
                 if(mapped >= 0 && mapped < numNodes) {
                   LongBigArrays.set(successors, outdegree++, mapped);
                 } else {
-                  pl.logger().info("Neighbour " + mapped + " of " + currentId + " out of range, skipping");
+                  pl.logger().trace("Neighbour " + mapped + " of " + currentId + " out of range, skipping");
                 }
               }
             }
