@@ -1,10 +1,17 @@
 package it.unipd.dei.webqual.converter;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
@@ -19,65 +26,48 @@ public class Main {
     String inputFile = args[0];
     String outBasename = args[1];
 
-    pl.logger().info("==== Loading graph from " + inputFile);
+    pl.start("==== Loading graph from " + inputFile);
     Function<byte[], Long> map =
       FunctionFactory.buildDeterministicMap(inputFile, 16, pl);
     ImmutableGraph iag =
       ImmutableAdjacencyGraph.loadOffline(inputFile, 16, map, pl);
-    pl.logger().info("Loaded graph with " + iag.numNodes() + " nodes");
+    pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
 
     String efOut = outBasename + "-ef";
-    pl.logger().info(
+    pl.start(
       "==== Converting the graph to Elias-Fano format: output " + efOut);
     EFGraph.store(iag, efOut, pl);
+    pl.stop("Conversion completed");
 
     ImmutableGraph efGraph = EFGraph.loadOffline(efOut);
 
     pl.logger().info("==== Statistics ====");
     pl.logger().info("Number of nodes: " + efGraph.numNodes());
     pl.logger().info("Number of arcs: " + efGraph.numArcs());
+    MetricRegistry iagRegistry = ImmutableAdjacencyGraph.getRegistry();
+    Counter missingItems =
+      iagRegistry.counter(ImmutableAdjacencyGraph.missingItemsCounterName(inputFile, 0));
+    Histogram degreesDist =
+      iagRegistry.histogram(ImmutableAdjacencyGraph.degreeHistogramName(inputFile, 0));
+    pl.logger().info("Mean outdegree: {}", degreesDist.getSnapshot().getMean());
+    pl.logger().info("Max outdegree: {}", degreesDist.getSnapshot().getMax());
+    pl.logger().info("Missing IDs: {}", missingItems.getCount());
 
-    pl.logger().info("==== Checking for errors ====");
+    CsvReporter reporter = CsvReporter.forRegistry(iagRegistry)
+      .formatFor(Locale.ITALIAN)
+      .convertRatesTo(TimeUnit.SECONDS)
+      .convertDurationsTo(TimeUnit.SECONDS)
+      .build(new File("reports"));
+    new File("reports").mkdir();
+    reporter.report();
+    reporter.close();
+
+    pl.start("==== Checking for errors ====");
     if(!iag.equals(efGraph)) {
       pl.logger().error("Graphs are not equal!!!");
       pl.logger().info(efGraph.numNodes() + " ?= " + iag.numNodes());
-      checkSuccessors((ImmutableAdjacencyGraph) iag, (EFGraph) efGraph);
     }
-  }
-
-  public static void checkForOutOfRange(ImmutableGraph g, ProgressLogger pl) {
-    NodeIterator ni = g.nodeIterator();
-    while(ni.hasNext()) {
-      long node = ni.next();
-      LazyLongIterator succs = ni.successors();
-      long outDegree = ni.outdegree();
-      while(outDegree-- > 0) {
-        long succ = succs.nextLong();
-        if(succ < 0 || succ > g.numNodes()) {
-          throw new RuntimeException(
-            String.format("Out of bounds neighbour: %d of node %d", succ, node));
-        }
-      }
-    }
-    pl.logger().info("Check completed, no errors found");
-  }
-
-  public static void checkSuccessors(ImmutableAdjacencyGraph a, EFGraph b) {
-    long totNodes = a.numNodes();
-    NodeIterator ai = a.nodeIterator();
-    LazyLongIterator succA, succB;
-    long outDegA, outDegB;
-    while(ai.hasNext()) {
-      long node = ai.next();
-      succA = ai.successors();
-      outDegA = ai.outdegree();
-      succB = b.successors(node);
-      outDegB = b.outdegree(node);
-      if (outDegA != outDegB) {
-        throw new RuntimeException(
-          "Outdegree of node " + node + " is different in the two graphs: IAG="+outDegA+" EFGraph="+outDegB);
-      }
-    }
+    pl.stop("Check completed, no errors found :-)");
   }
 
 }

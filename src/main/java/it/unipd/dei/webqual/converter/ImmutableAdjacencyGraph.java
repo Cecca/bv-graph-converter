@@ -1,5 +1,8 @@
 package it.unipd.dei.webqual.converter;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
 import it.unimi.dsi.big.webgraph.ImmutableGraph;
 import it.unimi.dsi.big.webgraph.ImmutableSequentialGraph;
 import it.unimi.dsi.big.webgraph.NodeIterator;
@@ -9,10 +12,16 @@ import it.unimi.dsi.logging.ProgressLogger;
 
 import java.io.*;
 import java.util.NoSuchElementException;
+import java.util.Random;
 
 import static it.unipd.dei.webqual.converter.Utils.isHead;
 
 public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
+
+  private final static MetricRegistry registry = new MetricRegistry();
+
+  /** Used to keep measures with the registry unique across calls */
+  private int iteratorId = -1;
 
   /** Length in bytes of the IDs */
   private final int idLen;
@@ -70,8 +79,13 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
   }
 
   public NodeIterator nodeIterator() {
+    // increase count of iterators to keep measures unique across calls
+    iteratorId++;
     try {
       return new NodeIterator() {
+
+        Counter missingItems = registry.counter(missingItemsCounterName(filename, iteratorId));
+        Histogram degreesDist = registry.histogram(degreeHistogramName(filename, iteratorId));
 
         final DataInputStream dis = new DataInputStream(
           new BufferedInputStream(new FileInputStream(filename)));
@@ -111,12 +125,14 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
                 if(mapped >= 0 && mapped < numNodes) {
                   LongBigArrays.set(successors, outdegree++, mapped);
                 } else {
+                  missingItems.inc();
                   pl.logger().trace("Neighbour " + mapped + " of " + currentId + " out of range, skipping");
                 }
               }
             }
 
             successors = LongBigArrays.trim(successors, outdegree);
+            degreesDist.update(outdegree);
 
           } catch (IOException e) {
             throw new RuntimeException(e);
@@ -157,4 +173,15 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
     }
   }
 
+  public static MetricRegistry getRegistry() {
+    return registry;
+  }
+
+  public static String missingItemsCounterName(String filename, int id) {
+    return "iag-"+filename+"-missing-items-"+id;
+  }
+
+  public static String degreeHistogramName(String filename, int id) {
+    return "iag-"+filename+"-degree-dist-"+id;
+  }
 }
