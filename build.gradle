@@ -4,6 +4,11 @@ apply plugin: 'eclipse'
 apply plugin: 'findbugs'
 apply plugin: 'application'
 apply plugin: 'groovy'
+apply plugin: 'maven-publish'
+
+group = 'it.unipd.dei'
+//name = 'webqual-graph-converter'
+version = '0.1.0-SNAPSHOT'
 
 mainClassName = "it.unipd.dei.webqual.converter.Main"
 //mainClassName = "it.unipd.dei.webqual.converter.merge.GraphMerger"
@@ -41,6 +46,14 @@ task wrapper(type: Wrapper) {
 idea {
   module {
     downloadSources = true
+  }
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+    }
   }
 }
 
