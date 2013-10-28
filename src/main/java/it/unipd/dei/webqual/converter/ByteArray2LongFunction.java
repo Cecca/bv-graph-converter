@@ -1,17 +1,17 @@
 package it.unipd.dei.webqual.converter;
 
 import it.unimi.dsi.fastutil.Function;
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
 public class ByteArray2LongFunction implements Function<byte[], Long> {
 
-  private static final long DEFAULT_RET_VALUE = -1;
+  private static final int DEFAULT_RET_VALUE = -1;
 
-  private Long2LongOpenHashMap map;
+  private Long2IntOpenHashMap map;
 
   public ByteArray2LongFunction() {
     super();
-    this.map = new Long2LongOpenHashMap();
+    this.map = new Long2IntOpenHashMap();
     this.map.defaultReturnValue(DEFAULT_RET_VALUE);
   }
 
@@ -21,7 +21,7 @@ public class ByteArray2LongFunction implements Function<byte[], Long> {
 
   @Override
   public Long put(byte[] bytes, Long aLong) {
-    final long oldValue = map.put(transform(bytes), (long) aLong);
+    final long oldValue = map.put(transform(bytes), aLong.intValue());
     if (oldValue != DEFAULT_RET_VALUE) {
       throw new RuntimeException(
         "The input sequence contains duplicates: " + aLong + " has " + oldValue + " already associated");
@@ -31,7 +31,7 @@ public class ByteArray2LongFunction implements Function<byte[], Long> {
 
   @Override
   public Long get(Object o) {
-    return map.get(transform((byte[]) o));
+    return (long) map.get(transform((byte[]) o));
   }
 
   @Override
@@ -41,7 +41,7 @@ public class ByteArray2LongFunction implements Function<byte[], Long> {
 
   @Override
   public Long remove(Object o) {
-    return map.remove(transform((byte[]) o));
+    return (long) map.remove(transform((byte[]) o));
   }
 
   @Override
