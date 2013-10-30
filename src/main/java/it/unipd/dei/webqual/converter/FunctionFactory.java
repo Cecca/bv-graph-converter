@@ -29,7 +29,7 @@ public class FunctionFactory {
       @Override
       public Long get(Object key) {
         byte[] bytes = (byte[]) key;
-        return Utils.getLong(bytes);
+        return Utils.reset(Utils.getLong(bytes));
       }
 
       @Override

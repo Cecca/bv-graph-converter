@@ -26,24 +26,26 @@ public class Checks {
   public static boolean checkPositiveIDs(ImmutableGraph g, ProgressLogger pl) {
     pl.start("==== Checking for positive IDs ====");
     NodeIterator it = g.nodeIterator();
+    int i = 0;
     while(it.hasNext()) {
       pl.update();
       long node = it.next();
       if(node < 0) {
-        pl.logger().error("ID {} is negative", node);
+        pl.logger().error("ID {} is negative, it's the {}-th node", node, i);
         pl.stop();
-        return false;
+//        return false;
       }
       long outdeg = it.outdegree();
       LazyLongIterator succs = it.successors();
       while(outdeg-- != 0) {
         long s = succs.nextLong();
         if(s < 0) {
-          pl.logger().error("ID {}, neighbour of {}, is negative", s, node);
+          pl.logger().error("ID {}, neighbour of {} ({}-th node), is negative", s, node, i);
           pl.stop();
-          return false;
+//          return false;
         }
       }
+      i++;
     }
     pl.stop("Check completed, no errors found, the graph has only positive IDs :-)");
     return true;
