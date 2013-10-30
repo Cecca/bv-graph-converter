@@ -69,4 +69,30 @@ public class Checks {
     return true;
   }
 
+  public static boolean checkSorted(File[] sortedFiles, int idLen, ProgressLogger pl) throws IOException {
+    for(int i=0; i<sortedFiles.length; i++) {
+      System.out.printf("%f%%\r", ((double) i)/sortedFiles.length * 100);
+      checkSorted(sortedFiles[i], idLen, pl);
+    }
+    return true;
+  }
+
+  public static boolean checkSorted(File f, int idLen, ProgressLogger pl) throws IOException {
+    pl.start("Checking file " + f.getName());
+    ArrayComparator cmp = new ArrayComparator();
+    AdjacencyHeadIterator it =
+      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, true);
+    byte[] last = it.next();
+    while(it.hasNext()) {
+      pl.update();
+      byte[] cur = it.next();
+      if(cmp.compare(cur, last) < 0) {
+        throw new IllegalArgumentException("File " + f + " is not sorted");
+      }
+      last = cur;
+    }
+    pl.stop(f.getName() + " is sorted :-)");
+    return true;
+  }
+
 }

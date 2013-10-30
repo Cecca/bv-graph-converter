@@ -165,27 +165,6 @@ public class GraphMerger {
     return output;
   }
 
-  private static void checkFiles(File[] sortedFiles, int idLen) throws IOException {
-    for(int i=0; i<sortedFiles.length; i++) {
-      System.out.printf("%f%%\r", ((double) i)/sortedFiles.length * 100);
-      checkFile(sortedFiles[i], idLen);
-    }
-  }
-
-  private static void checkFile(File f, int idLen) throws IOException {
-    ArrayComparator cmp = new ArrayComparator();
-    AdjacencyHeadIterator it =
-      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, true);
-    byte[] last = it.next();
-    while(it.hasNext()) {
-      byte[] cur = it.next();
-      if(cmp.compare(cur, last) < 0) {
-        throw new IllegalArgumentException("File " + f + " is not sorted");
-      }
-      last = cur;
-    }
-  }
-
   public static void main(String[] args) throws IOException, InterruptedException {
 
     Options opts = new Options();
@@ -203,8 +182,7 @@ public class GraphMerger {
     File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen);
 
     if(!opts.noCheckSort) {
-      log.info("Checking sorted files");
-      checkFiles(sortedFiles, opts.idLen);
+      Checks.checkSorted(sortedFiles, opts.idLen, new ProgressLogger());
     }
 
     log.info("============= Merging files ===============");
@@ -218,7 +196,6 @@ public class GraphMerger {
     log.info("{} duplicates have been merged", metrics.counter("duplicates").getCount());
 
     if(!opts.noCheckDup) {
-      log.info("Checking for duplicates in output");
       Checks.checkDuplicates(outFile, opts.idLen, new ProgressLogger());
     }
 
