@@ -49,7 +49,7 @@ public class FunctionFactory {
 
       @Override
       public void clear() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // nothing to do
       }
     };
   }
@@ -59,7 +59,7 @@ public class FunctionFactory {
                                                               ProgressLogger pl) throws IOException {
     if(pl != null)
       pl.start("Counting nodes and creating perfect hash function");
-    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, true);
+    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
     ByteArrayTransformationStrategy trStrat =
       new ByteArrayTransformationStrategy(idLen);
 
@@ -82,7 +82,7 @@ public class FunctionFactory {
                                                                                                  ProgressLogger pl) throws IOException {
     if(pl != null)
       pl.start("Counting nodes and creating perfect hash function");
-    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, true);
+    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
     ByteArrayTransformationStrategy trStrat =
       new ByteArrayTransformationStrategy(idLen);
 
@@ -105,7 +105,7 @@ public class FunctionFactory {
                                                                                                  ProgressLogger pl) throws IOException {
     if(pl != null)
       pl.start("Counting nodes and creating perfect hash function");
-    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, true);
+    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
     ByteArrayTransformationStrategy trStrat =
       new ByteArrayTransformationStrategy(idLen);
 
@@ -128,7 +128,7 @@ public class FunctionFactory {
                                                                                    ProgressLogger pl) throws IOException {
     if(pl != null)
       pl.start("Counting nodes and creating perfect hash function");
-    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, true);
+    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
     ByteArrayTransformationStrategy trStrat =
       new ByteArrayTransformationStrategy(idLen);
 
@@ -154,7 +154,7 @@ public class FunctionFactory {
     if(pl != null)
       pl.start("Building the deterministic map, with increasing IDs");
 
-    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, true);
+    AdjacencyHeads heads = new AdjacencyHeads(file, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
     ByteArray2LongFunction map = new ByteArray2LongFunction();
 
     long cnt = 0;
@@ -177,7 +177,7 @@ public class FunctionFactory {
 
   public static void main(String[] args) throws IOException {
     Function<byte[], Long> map = buildDeterministicMap("merged", 16, new ProgressLogger());
-    AdjacencyHeadIterator it = new AdjacencyHeadIterator("merged", 16, true);
+    AdjacencyHeadIterator it = new AdjacencyHeadIterator("merged", 16, AdjacencyHeadIterator.ResetHeads.RESET);
 
     int errCnt = 0;
     int totArcs = 0;

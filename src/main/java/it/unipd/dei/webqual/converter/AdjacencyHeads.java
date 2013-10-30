@@ -7,15 +7,15 @@ public class AdjacencyHeads implements Iterable<byte[]> {
 
   private final String fileName;
   private final int idLen;
-  private final boolean reset;
+  private final AdjacencyHeadIterator.ResetHeads reset;
 
   private AdjacencyHeadIterator firstIterator;
 
   public AdjacencyHeads(String fileName, int idLen) throws IOException {
-    this(fileName, idLen, true);
+    this(fileName, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
   }
 
-  public AdjacencyHeads(String fileName, int idLen, boolean reset) throws IOException {
+  public AdjacencyHeads(String fileName, int idLen, AdjacencyHeadIterator.ResetHeads reset) throws IOException {
     this.fileName = fileName;
     this.idLen = idLen;
     this.reset = reset;

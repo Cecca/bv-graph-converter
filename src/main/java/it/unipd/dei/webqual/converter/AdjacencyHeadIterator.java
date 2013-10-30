@@ -8,9 +8,11 @@ import static it.unipd.dei.webqual.converter.Utils.*;
 
 public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
+  public static enum ResetHeads { RESET, DONT_RESET }
+
   private final String fileName;
   private final int idLen;
-  private final boolean reset;
+  private final ResetHeads reset;
   private final DataInputStream dis;
 
   private boolean hasNext;
@@ -20,7 +22,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
   private long count;
 
-  public AdjacencyHeadIterator(String fileName, int idLen, boolean reset) throws IOException {
+  public AdjacencyHeadIterator(String fileName, int idLen, ResetHeads reset) throws IOException {
     this.fileName = fileName;
     this.idLen = idLen;
     this.reset = reset;
@@ -34,11 +36,14 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
       throw new NoSuchElementException(
         "The first id is not the head of an adjacency list: file " + fileName);
     }
-    if(reset) {
-      this.next = reset(firstNode);
-    } else {
-      this.next = new byte[idLen];
-      System.arraycopy(firstNode, 0, next, 0, idLen);
+    switch(reset){
+      case RESET:
+        this.next = reset(firstNode);
+        break;
+      case DONT_RESET:
+        this.next = new byte[idLen];
+        System.arraycopy(firstNode, 0, next, 0, idLen);
+        break;
     }
 
     this.count = 1;
@@ -63,21 +68,21 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
       while (dis.available() > 0) {
         byte[] buf = new byte[idLen];
         dis.read(buf);
-//        System.out.print("Analyzing " + new BigInteger(buf).toString(16));
         if(isHead(buf)) {
-//          System.out.println("<<--------- Found a head");
           count++;
-          if(reset) {
-            next = reset(buf);
-          } else {
-            next = new byte[idLen];
-            System.arraycopy(buf, 0, next, 0, idLen);
+          switch(reset) {
+            case RESET:
+              next = reset(buf);
+              break;
+            case DONT_RESET:
+              next = new byte[idLen];
+              System.arraycopy(buf, 0, next, 0, idLen);
+              break;
           }
           hasNext = true;
           break;
         } else {
           neighbours.add(buf);
-//          System.out.println();
         }
       }
     } catch (IOException e) {

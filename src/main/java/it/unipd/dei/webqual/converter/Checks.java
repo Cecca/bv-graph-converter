@@ -55,7 +55,7 @@ public class Checks {
     pl.start("## Checking for duplicates: " + f);
     ArrayComparator cmp = new ArrayComparator();
     AdjacencyHeadIterator it =
-      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, true);
+      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, AdjacencyHeadIterator.ResetHeads.RESET);
     byte[] last = it.next();
     int i = 0;
     while(it.hasNext()) {
@@ -85,7 +85,7 @@ public class Checks {
     pl.start("Checking file " + f.getName());
     ArrayComparator cmp = new ArrayComparator();
     AdjacencyHeadIterator it =
-      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, true);
+      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, AdjacencyHeadIterator.ResetHeads.RESET);
     byte[] last = it.next();
     while(it.hasNext()) {
       pl.update();
