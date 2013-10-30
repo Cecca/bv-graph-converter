@@ -3,6 +3,7 @@ package it.unipd.dei.webqual.converter;
 import it.unimi.dsi.big.webgraph.ImmutableGraph;
 import it.unimi.dsi.big.webgraph.LazyLongIterator;
 import it.unimi.dsi.big.webgraph.NodeIterator;
+import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unipd.dei.webqual.converter.merge.ArrayComparator;
 
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 
 public class Checks {
 
@@ -71,6 +73,7 @@ public class Checks {
       i++;
     }
     pl.stop("Check completed, no errors found, the file contains no duplicate IDs :-)");
+    pl.logger().info("Checked {} nodes", it.getCount());
     return true;
   }
 
@@ -113,6 +116,23 @@ public class Checks {
       i++;
     }
     pl.stop("The IDs are increasing :-)");
+    return true;
+  }
+
+  public static boolean checkMap(File graphFile, int idLen, Function<byte[], Long> map, ProgressLogger pl) throws IOException {
+    HashSet<Long> alreadySeen = new HashSet<>();
+    AdjacencyHeadIterator it = new AdjacencyHeadIterator(graphFile, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
+    pl.start("## Checking if the map is bijective");
+    int i = 0;
+    while(it.hasNext()) {
+      byte[] key = it.next();
+      long value = map.get(key);
+      if(alreadySeen.contains(value)) {
+        throw new RuntimeException("The map is not bijective, duplicate element at position ("+i+")");
+      }
+      i++;
+    }
+    pl.stop("The map is bijective, everything OK");
     return true;
   }
 

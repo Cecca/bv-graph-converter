@@ -20,6 +20,7 @@ public class FunctionFactory {
   public static Function<byte[], Long> buildIdentity(File file, ProgressLogger pl) throws IOException {
     AdjacencyHeads heads = new AdjacencyHeads(file, 8); // read longs
     final long size = heads.getCount();
+    pl.logger().info("Identity function built on {} nodes", size);
 
     return new Function<byte[], Long>() {
       @Override

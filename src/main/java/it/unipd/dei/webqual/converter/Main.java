@@ -35,9 +35,11 @@ public class Main {
     pl.logger().info("Building hash function");
     Function<byte[], Long> mapFunc =
       FunctionFactory.buildMphf(opts.inputGraph, opts.idLen, pl);
-    String mphSerializedName = opts.inputGraph + "-mph";
-    pl.logger().info("Storing hash function to {}", mphSerializedName);
-    serialize(mphSerializedName, mapFunc);
+//    String mphSerializedName = opts.inputGraph + "-mph";
+//    pl.logger().info("Storing hash function to {}", mphSerializedName);
+//    serialize(mphSerializedName, mapFunc);
+
+    Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
 
     pl.logger().info("Loading graph from {}", opts.inputGraph);
     ImmutableGraph originalGraph =
@@ -57,6 +59,7 @@ public class Main {
       mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, comparator, 0);
     }
     Checks.checkSorted(mergedFile, 8, comparator, pl);
+    Checks.checkDuplicates(mergedFile, 8, pl);
 
     pl.start("==== Loading graph from " + mergedFile);
     Function<byte[], Long> map =
@@ -75,7 +78,7 @@ public class Main {
 
     String efOut = opts.outputFile + "-ef";
 
-    ImmutableGraph efGraph = Conversions.toEFGraph(iag, efOut, pl);
+    ImmutableGraph efGraph = Conversions.toBVGraph(iag, efOut, pl);
 
     Checks.checkPositiveIDs(iag, pl);
 
