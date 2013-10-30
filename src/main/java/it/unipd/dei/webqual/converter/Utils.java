@@ -48,6 +48,10 @@ public class Utils {
     return id;
   }
 
+  public static long setHead(long id) {
+    return id | HEAD_MASK_L;
+  }
+
   public static long reset(long id) {
     return id & RESET_MASK_L;
   }

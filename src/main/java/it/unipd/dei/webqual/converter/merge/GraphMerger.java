@@ -99,7 +99,7 @@ public class GraphMerger {
    * @return
    * @throws IOException
    */
-  private static File mergeFiles( final File[] sortedFiles,
+  public static File mergeFiles( final File[] sortedFiles,
                                           final File outputName,
                                           final int groupBy,
                                           final int idLen,
