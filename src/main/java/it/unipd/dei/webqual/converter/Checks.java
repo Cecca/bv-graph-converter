@@ -52,20 +52,22 @@ public class Checks {
   }
 
   public static boolean checkDuplicates(File f, int idLen, ProgressLogger pl) throws IOException {
-    pl.start("==== Checking for duplicates ====");
+    pl.start("## Checking for duplicates: " + f);
     ArrayComparator cmp = new ArrayComparator();
     AdjacencyHeadIterator it =
       new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, true);
     byte[] last = it.next();
+    int i = 0;
     while(it.hasNext()) {
       pl.update();
       byte[] cur = it.next();
       if(cmp.compare(cur, last) == 0) {
         throw new IllegalArgumentException(
           "File " + f + " contains duplicates: \n\t"+ Arrays.toString(last) +
-            "\n\t" + Arrays.toString(cur));
+            "\n\t" + Arrays.toString(cur) + " ("+i+"-th element)");
       }
       last = cur;
+      i++;
     }
     pl.stop("Check completed, no errors found, the file contains no duplicate IDs :-)");
     return true;

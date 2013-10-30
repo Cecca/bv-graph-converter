@@ -1,7 +1,9 @@
 package it.unipd.dei.webqual.converter.sort;
 
-import com.codahale.metrics.CsvReporter;
-import it.unimi.dsi.big.webgraph.*;
+import it.unimi.dsi.big.webgraph.ImmutableGraph;
+import it.unimi.dsi.big.webgraph.LazyLongIterator;
+import it.unimi.dsi.big.webgraph.LazyLongIterators;
+import it.unimi.dsi.big.webgraph.NodeIterator;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unipd.dei.webqual.converter.*;
@@ -11,8 +13,10 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import static it.unipd.dei.webqual.converter.Utils.reset;
 import static it.unipd.dei.webqual.converter.Utils.setHead;
@@ -88,6 +92,7 @@ public class GraphSorter {
       }
     }
     dos.close();
+    Checks.checkDuplicates(out, 8, pl);
     pl.logger().info("Write completed");
     return out;
   }
@@ -118,13 +123,18 @@ public class GraphSorter {
     File[] chunks = splitSorted(originalGraph.nodeIterator(), opts.outputDir, opts.chunkSize);
 
     pl.logger().info("Merging files");
-    File out = GraphMerger.mergeFiles(chunks, opts.outputFile, chunks.length, Long.SIZE/8, 0);
+    File mergedFile;
+    if(chunks.length == 1) {
+      mergedFile = chunks[0];
+    } else {
+      mergedFile = GraphMerger.mergeFiles(chunks, opts.outputFile, chunks.length, Long.SIZE/8, 0);
+    }
 
     pl.start("==== Loading graph from " + opts.outputFile);
     Function<byte[], Long> map =
-      FunctionFactory.buildIdentity(opts.outputFile.getName(), pl);
+      FunctionFactory.buildIdentity(mergedFile.getName(), pl);
     ImmutableGraph iag =
-      ImmutableAdjacencyGraph.loadOffline(opts.outputFile.getName(), 8, map, pl);
+      ImmutableAdjacencyGraph.loadOffline(mergedFile.getName(), 8, map, pl);
     pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
 
     String efOut = opts.outputFile + "-ef";
