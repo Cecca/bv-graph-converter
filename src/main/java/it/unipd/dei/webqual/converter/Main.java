@@ -37,6 +37,7 @@ public class Main {
     pl.logger().info("Loading graph from {}", opts.inputGraph);
     ImmutableGraph originalGraph =
       ImmutableAdjacencyGraph.loadOffline(opts.inputGraph.getCanonicalPath(), opts.idLen, mapFunc, pl);
+    final long originalSize = originalGraph.numNodes();
 
     pl.logger().info("Sorting graph");
     File[] chunks = GraphSplitter.split(originalGraph, opts.outputDir, opts.chunkSize, pl);
@@ -57,12 +58,17 @@ public class Main {
     ImmutableGraph iag =
       ImmutableAdjacencyGraph.loadOffline(mergedFile.getCanonicalPath(), 8, map, pl);
     pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
+    final long convertedSize = iag.numNodes();
+    if(convertedSize != originalSize) {
+      throw new RuntimeException(
+        "Converted graph has size different than the original! Converted: "
+          +convertedSize+" Original: "+originalSize);
+    }
+
 
     String efOut = opts.outputFile + "-ef";
 
     ImmutableGraph efGraph = Conversions.toEFGraph(iag, efOut, pl);
-
-    Statistics.stats(efGraph, pl);
 
     Checks.checkPositiveIDs(iag, pl);
 
