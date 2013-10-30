@@ -16,7 +16,7 @@ public class Utils {
   /**
    * Creates a `long` from the first 8 bytes of the 16 bytes ID.
    */
-  protected static long getLong(byte[] id128) {
+  public static long getLong(byte[] id128) {
 
     long l = 0;
     // Loop manually unrolled

@@ -4,6 +4,7 @@ import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unipd.dei.webqual.converter.merge.ArrayComparator;
+import it.unipd.dei.webqual.converter.merge.ArrayLongComparator;
 import it.unipd.dei.webqual.converter.merge.GraphMerger;
 import it.unipd.dei.webqual.converter.sort.GraphSorter;
 import org.kohsuke.args4j.CmdLineException;
@@ -26,7 +27,7 @@ public class Main {
       System.exit(1);
     }
 
-    Comparator<byte[]> comparator = new ArrayComparator();
+    Comparator<byte[]> comparator = new ArrayLongComparator();
 
     ProgressLogger pl = new ProgressLogger();
     pl.displayFreeMemory = true;
