@@ -51,6 +51,7 @@ public class Main {
     } else {
       mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, 0);
     }
+    Checks.checkSorted(mergedFile, 8, pl);
 
     pl.start("==== Loading graph from " + mergedFile);
     Function<byte[], Long> map =
@@ -64,6 +65,7 @@ public class Main {
         "Converted graph has size different than the original! Converted: "
           +convertedSize+" Original: "+originalSize);
     }
+    Checks.checkIncreasing(iag, pl);
 
 
     String efOut = opts.outputFile + "-ef";
@@ -71,6 +73,8 @@ public class Main {
     ImmutableGraph efGraph = Conversions.toEFGraph(iag, efOut, pl);
 
     Checks.checkPositiveIDs(iag, pl);
+
+    Checks.checkEquality(iag, efGraph, pl);
 
     pl.logger().info("All done");
 

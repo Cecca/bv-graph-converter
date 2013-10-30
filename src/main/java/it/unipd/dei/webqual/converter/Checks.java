@@ -99,4 +99,21 @@ public class Checks {
     return true;
   }
 
+  public static boolean checkIncreasing(ImmutableGraph g, ProgressLogger pl) {
+    pl.start("### Start checking for increasing IDs");
+    NodeIterator it = g.nodeIterator();
+    long old = it.nextLong();
+    int i=0;
+    while(it.hasNext()) {
+      pl.update();
+      long current = it.nextLong();
+      if(current <= old) {
+        throw new RuntimeException("Graph with not increasing IDs: "+current+" <= "+old+" (position "+i+")");
+      }
+      i++;
+    }
+    pl.stop("The IDs are increasing :-)");
+    return true;
+  }
+
 }
