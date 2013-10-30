@@ -29,7 +29,7 @@ public class GraphMerger {
   private static final PairComparator PAIR_COMPARATOR = new PairComparator();
   private static final PairMerger PAIR_MERGER = new PairMerger();
 
-  private static void sort(File inPath, File outPath, int idLen) throws IOException {
+  public static void sort(File inPath, File outPath, int idLen) throws IOException {
     log.info("Sorting {}", inPath);
     Timer timer = Metrics.fileSortingTimer;
     Timer.Context context = timer.time();
@@ -71,7 +71,7 @@ public class GraphMerger {
     out.close();
   }
 
-  private static File[] sortFiles(File[] inFiles, int idLen) throws IOException {
+  public static File[] sortFiles(File[] inFiles, int idLen) throws IOException {
     log.info("============= Sorting files ===============");
     Timer timer = Metrics.totalSortingTimer;
     Timer.Context context = timer.time();

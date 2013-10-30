@@ -30,8 +30,8 @@ public class Main {
     pl.logger().info("Building hash function");
     Function<byte[], Long> mapFunc =
       FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
-    String mphSerializedName = opts.inputGraph + "-mph";
-    pl.logger().info("Storing hash function to {}", mphSerializedName);
+//    String mphSerializedName = opts.inputGraph + "-mph";
+//    pl.logger().info("Storing hash function to {}", mphSerializedName);
 //    serialize(mphSerializedName, mapFunc);
 
     pl.logger().info("Loading graph from {}", opts.inputGraph);
@@ -39,14 +39,16 @@ public class Main {
       ImmutableAdjacencyGraph.loadOffline(opts.inputGraph.getCanonicalPath(), opts.idLen, mapFunc, pl);
 
     pl.logger().info("Sorting graph");
-    File[] chunks = GraphSorter.splitSorted(originalGraph.nodeIterator(), opts.outputDir, opts.chunkSize);
+    File[] chunks = GraphSplitter.split(originalGraph, opts.outputDir, opts.chunkSize, pl);
+
+    File[] sortedChunks = GraphMerger.sortFiles(chunks, 8);
 
     pl.logger().info("Merging files");
     File mergedFile;
-    if(chunks.length == 1) {
+    if(sortedChunks.length == 1) {
       mergedFile = chunks[0];
     } else {
-      mergedFile = GraphMerger.mergeFiles(chunks, opts.outputFile, chunks.length, Long.SIZE / 8, 0);
+      mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, chunks.length, Long.SIZE / 8, 0);
     }
 
     pl.start("==== Loading graph from " + mergedFile);
