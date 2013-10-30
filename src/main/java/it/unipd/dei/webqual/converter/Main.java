@@ -35,13 +35,7 @@ public class Main {
     ImmutableGraph efGraph = EFGraph.loadOffline(efOut);
 
     Statistics.stats(efGraph, pl);
-
-    pl.start("==== Checking for errors ====");
-    if(!iag.equals(efGraph)) {
-      pl.logger().error("Graphs are not equal!!!");
-      pl.logger().info(efGraph.numNodes() + " ?= " + iag.numNodes());
-    }
-    pl.stop("Check completed, no errors found :-)");
+    Checks.checkEquality(efGraph, iag, pl);
   }
 
 }
