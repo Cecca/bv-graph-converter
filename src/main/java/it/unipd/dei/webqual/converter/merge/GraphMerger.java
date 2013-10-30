@@ -161,7 +161,7 @@ public class GraphMerger {
     File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen, new ArrayComparator());
 
     if(!opts.noCheckSort) {
-      Checks.checkSorted(sortedFiles, opts.idLen, new ProgressLogger());
+      Checks.checkSorted(sortedFiles, opts.idLen, new ArrayComparator(), new ProgressLogger());
     }
 
     log.info("============= Merging files ===============");

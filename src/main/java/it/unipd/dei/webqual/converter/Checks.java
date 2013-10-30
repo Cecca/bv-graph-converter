@@ -9,6 +9,7 @@ import it.unipd.dei.webqual.converter.merge.ArrayComparator;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Comparator;
 
 public class Checks {
 
@@ -73,17 +74,16 @@ public class Checks {
     return true;
   }
 
-  public static boolean checkSorted(File[] sortedFiles, int idLen, ProgressLogger pl) throws IOException {
+  public static boolean checkSorted(File[] sortedFiles, int idLen, Comparator<byte[]> cmp, ProgressLogger pl) throws IOException {
     for(int i=0; i<sortedFiles.length; i++) {
       System.out.printf("%f%%\r", ((double) i)/sortedFiles.length * 100);
-      checkSorted(sortedFiles[i], idLen, pl);
+      checkSorted(sortedFiles[i], idLen, cmp, pl);
     }
     return true;
   }
 
-  public static boolean checkSorted(File f, int idLen, ProgressLogger pl) throws IOException {
+  public static boolean checkSorted(File f, int idLen, Comparator<byte[]> cmp, ProgressLogger pl) throws IOException {
     pl.start("Checking file " + f.getName());
-    ArrayComparator cmp = new ArrayComparator();
     AdjacencyHeadIterator it =
       new AdjacencyHeadIterator(f, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
     byte[] last = it.next();

@@ -56,7 +56,7 @@ public class Main {
     } else {
       mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, comparator, 0);
     }
-    Checks.checkSorted(mergedFile, 8, pl);
+    Checks.checkSorted(mergedFile, 8, comparator, pl);
 
     pl.start("==== Loading graph from " + mergedFile);
     Function<byte[], Long> map =
