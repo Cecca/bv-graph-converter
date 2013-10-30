@@ -13,15 +13,14 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static it.unipd.dei.webqual.converter.Utils.reset;
 import static it.unipd.dei.webqual.converter.Utils.setHead;
 
 public class GraphSorter {
+
+  private static HashSet<Long> alreadySeen = new HashSet<>();
 
   private static ProgressLogger pl = new ProgressLogger();
 
@@ -63,6 +62,10 @@ public class GraphSorter {
       long[][] neighs = it.successorBigArray();
       long outdeg = it.outdegree();
       chunk.add(new Pair(node, neighs, outdeg));
+
+      if(alreadySeen.contains(node))
+        throw new RuntimeException("Node "+node+" has already been see. (Position "+i+")");
+      alreadySeen.add(node);
 
       if(i % numElems == 0 || ! it.hasNext()) {
         Collections.sort(chunk);
@@ -110,10 +113,10 @@ public class GraphSorter {
 
     pl.logger().info("Building hash function");
     Function<byte[], Long> mapFunc =
-      FunctionFactory.buildMphf(opts.inputGraph, opts.idLen, pl);
+      FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
     String mphSerializedName = opts.inputGraph + "-mph";
     pl.logger().info("Storing hash function to {}", mphSerializedName);
-    serialize(mphSerializedName, mapFunc);
+//    serialize(mphSerializedName, mapFunc);
 
     pl.logger().info("Loading graph from {}", opts.inputGraph);
     ImmutableGraph originalGraph =
@@ -130,11 +133,11 @@ public class GraphSorter {
       mergedFile = GraphMerger.mergeFiles(chunks, opts.outputFile, chunks.length, Long.SIZE/8, 0);
     }
 
-    pl.start("==== Loading graph from " + opts.outputFile);
+    pl.start("==== Loading graph from " + mergedFile);
     Function<byte[], Long> map =
-      FunctionFactory.buildIdentity(mergedFile.getName(), pl);
+      FunctionFactory.buildIdentity(mergedFile.getCanonicalPath(), pl);
     ImmutableGraph iag =
-      ImmutableAdjacencyGraph.loadOffline(mergedFile.getName(), 8, map, pl);
+      ImmutableAdjacencyGraph.loadOffline(mergedFile.getCanonicalPath(), 8, map, pl);
     pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
 
     String efOut = opts.outputFile + "-ef";

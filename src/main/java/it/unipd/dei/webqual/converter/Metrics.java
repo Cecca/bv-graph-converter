@@ -40,15 +40,6 @@ public class Metrics {
       reportsDir.mkdir();
     reporter.report();
     reporter.close();
-
-    ConsoleReporter console = ConsoleReporter.forRegistry(registry)
-      .formattedFor(Locale.ITALY)
-      .convertDurationsTo(TimeUnit.SECONDS)
-      .convertRatesTo(TimeUnit.SECONDS)
-      .build();
-    console.report();
-    console.stop();
-    console.close();
   }
 
   public static void reset() {

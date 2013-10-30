@@ -10,7 +10,7 @@ public class LazyFilePairIterator implements Iterator<Pair> {
   private AdjacencyHeadIterator innerIterator;
 
   public LazyFilePairIterator(String fileName, int idLen) throws IOException {
-    this.innerIterator = new AdjacencyHeadIterator(fileName, idLen, true);
+    this.innerIterator = new AdjacencyHeadIterator(fileName, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
   }
 
   @Override
