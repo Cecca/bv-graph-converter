@@ -1,9 +1,5 @@
 package it.unipd.dei.webqual.converter.sort;
 
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.CsvReporter;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
 import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
@@ -15,8 +11,10 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import static it.unipd.dei.webqual.converter.Utils.reset;
 import static it.unipd.dei.webqual.converter.Utils.setHead;
