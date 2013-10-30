@@ -1,10 +1,7 @@
 package it.unipd.dei.webqual.converter.merge;
 
-import com.codahale.metrics.CsvReporter;
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import it.unimi.dsi.logging.ProgressLogger;
-import it.unipd.dei.webqual.converter.AdjacencyHeadIterator;
 import it.unipd.dei.webqual.converter.Checks;
 import it.unipd.dei.webqual.converter.Metrics;
 import it.unipd.dei.webqual.converter.Utils;
@@ -16,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class takes as input a set of adjacency list files and merges them
@@ -27,36 +23,35 @@ public class GraphMerger {
   private static final Logger log = LoggerFactory.getLogger(GraphMerger.class);
 
   private static final PairComparator PAIR_COMPARATOR = new PairComparator();
-  private static final PairMerger PAIR_MERGER = new PairMerger();
 
-  public static void sort(File inPath, File outPath, int idLen) throws IOException {
+  public static void sort(File inPath, File outPath, Comparator<byte[]> comparator, int idLen) throws IOException {
     log.info("Sorting {}", inPath);
     Timer timer = Metrics.fileSortingTimer;
     Timer.Context context = timer.time();
     List<Pair> pairs = new LinkedList<>();
 
     // the `true` parameter is for resetting the first bit of the IDs
-    LazyFilePairIterator it = new LazyFilePairIterator(inPath, idLen);
+    LazyFilePairIterator it = new LazyFilePairIterator(inPath, idLen, comparator);
     while(it.hasNext()) {
       pairs.add(it.next());
     }
 
-    Collections.sort(pairs);
+    Collections.sort(pairs, PAIR_COMPARATOR);
 
     // remove duplicates from the collection itself
-    Iterator<Pair> deduplicated = removeLocalDuplicates(pairs);
+    Iterator<Pair> deduplicated = removeLocalDuplicates(pairs, comparator);
 
     writeIterator(outPath, deduplicated);
     long time = context.stop();
     log.info("{} sorted, elapsed time: {} seconds", inPath, time / 1000000000);
   }
 
-  private static Iterator<Pair> removeLocalDuplicates(List<Pair> pairs) {
+  private static Iterator<Pair> removeLocalDuplicates(List<Pair> pairs, Comparator<byte[]> comparator) {
     Iterator<Pair>
       first = pairs.iterator(),
       second = pairs.iterator();
 
-    return new LazyMergeIterator<>(first, second, PAIR_COMPARATOR, PAIR_MERGER);
+    return new LazyMergeIterator<>(first, second, PAIR_COMPARATOR, new PairMerger(comparator));
   }
 
   private static void writeIterator(File outPath, Iterator<Pair> pairs) throws IOException {
@@ -71,14 +66,14 @@ public class GraphMerger {
     out.close();
   }
 
-  public static File[] sortFiles(File[] inFiles, int idLen) throws IOException {
+  public static File[] sortFiles(File[] inFiles, int idLen, Comparator<byte[]> comparator) throws IOException {
     log.info("============= Sorting files ===============");
     Timer timer = Metrics.totalSortingTimer;
     Timer.Context context = timer.time();
     File[] sortedFiles = new File[inFiles.length];
     for(int i = 0; i<inFiles.length; i++) {
       sortedFiles[i] = File.createTempFile("graph-merger", "sorting"+inFiles[i].getName());
-      sort(inFiles[i], sortedFiles[i], idLen);
+      sort(inFiles[i], sortedFiles[i], comparator, idLen);
     }
     long time = context.stop();
     log.info("====== Files sorted, elapsed time: {} seconds", time / 1000000000);
@@ -89,6 +84,7 @@ public class GraphMerger {
                                           final File outputName,
                                           final int groupBy,
                                           final int idLen,
+                                          final Comparator<byte[]> comparator,
                                           final int recursionLevel) throws IOException {
     if(groupBy < 2) {
       throw new IllegalArgumentException("groupBy should be >= 2");
@@ -96,7 +92,7 @@ public class GraphMerger {
     if(sortedFiles.length <= groupBy) {
       log.info("Recursion level {}. Merging {} files.",
         recursionLevel, sortedFiles.length);
-      return mergeFiles(sortedFiles, outputName, idLen);
+      return mergeFiles(sortedFiles, outputName, idLen, comparator);
     }
 
     File[] tmpFiles = new File[sortedFiles.length / groupBy];
@@ -109,11 +105,11 @@ public class GraphMerger {
 
       log.info("Recursion level {}. Merging {} out of {} files.",
         recursionLevel, group.length, sortedFiles.length);
-      tmpFiles[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen, recursionLevel+1);
+      tmpFiles[i] = mergeFiles(group, tmpFiles[i], groupBy, idLen, comparator, recursionLevel+1);
     }
 
     log.info("Recursion level {}. Merging temporary files together", recursionLevel);
-    return mergeFiles(tmpFiles, outputName, groupBy, idLen, recursionLevel+1);
+    return mergeFiles(tmpFiles, outputName, groupBy, idLen, comparator, recursionLevel+1);
   }
 
   /**
@@ -122,24 +118,24 @@ public class GraphMerger {
    * @param sortedFiles
    * @param output
    */
-  private static File mergeFiles(File[] sortedFiles, File output, int idLen) throws IOException {
+  private static File mergeFiles(File[] sortedFiles, File output, int idLen, Comparator<byte[]> comparator) throws IOException {
     Timer timer = Metrics.fileMergingTimer;
     Timer.Context context = timer.time();
     LazyMergeIterator<Pair>[] iterators = new LazyMergeIterator[sortedFiles.length/2];
     for(int i=0; i<iterators.length; i++) {
       if((2*i+1) < sortedFiles.length) {
         iterators[i] = new LazyMergeIterator<>(
-          new LazyFilePairIterator(sortedFiles[2*i], idLen),
-          new LazyFilePairIterator(sortedFiles[2*i+1], idLen),
-          PAIR_COMPARATOR, PAIR_MERGER);
+          new LazyFilePairIterator(sortedFiles[2*i], idLen, comparator),
+          new LazyFilePairIterator(sortedFiles[2*i+1], idLen, comparator),
+          PAIR_COMPARATOR, new PairMerger(comparator));
       } else {
         iterators[i] = new LazyMergeIterator<>(
-          new LazyFilePairIterator(sortedFiles[2*i], idLen),
-          PAIR_COMPARATOR, PAIR_MERGER);
+          new LazyFilePairIterator(sortedFiles[2*i], idLen, comparator),
+          PAIR_COMPARATOR, new PairMerger(comparator));
       }
     }
 
-    LazyMergeIterator<Pair> it = LazyMergeIterator.compose(PAIR_COMPARATOR, PAIR_MERGER, iterators);
+    LazyMergeIterator<Pair> it = LazyMergeIterator.compose(PAIR_COMPARATOR, new PairMerger(comparator), iterators);
     writeIterator(output, it);
 
     long time = context.stop();
@@ -162,7 +158,7 @@ public class GraphMerger {
 
     File[] inFiles = opts.inputDir.listFiles();
 
-    File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen);
+    File[] sortedFiles = (opts.noSort)? inFiles : sortFiles(inFiles, opts.idLen, new ArrayComparator());
 
     if(!opts.noCheckSort) {
       Checks.checkSorted(sortedFiles, opts.idLen, new ProgressLogger());
@@ -171,7 +167,7 @@ public class GraphMerger {
     log.info("============= Merging files ===============");
     Timer timer = Metrics.totalMergingTimer;
     Timer.Context context = timer.time();
-    File outFile = mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
+    File outFile = mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, new ArrayComparator(), 0);
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
 

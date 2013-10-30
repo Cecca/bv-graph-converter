@@ -3,6 +3,7 @@ package it.unipd.dei.webqual.converter;
 import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
+import it.unipd.dei.webqual.converter.merge.ArrayComparator;
 import it.unipd.dei.webqual.converter.merge.GraphMerger;
 import it.unipd.dei.webqual.converter.sort.GraphSorter;
 import org.kohsuke.args4j.CmdLineException;
@@ -10,6 +11,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
+import java.util.Comparator;
 
 public class Main {
 
@@ -23,6 +25,8 @@ public class Main {
       parser.printUsage(System.err);
       System.exit(1);
     }
+
+    Comparator<byte[]> comparator = new ArrayComparator();
 
     ProgressLogger pl = new ProgressLogger();
     pl.displayFreeMemory = true;
@@ -42,14 +46,14 @@ public class Main {
     pl.logger().info("Sorting graph");
     File[] chunks = GraphSplitter.split(originalGraph, opts.outputDir, opts.chunkSize, pl);
 
-    File[] sortedChunks = GraphMerger.sortFiles(chunks, 8);
+    File[] sortedChunks = GraphMerger.sortFiles(chunks, 8, comparator);
 
     pl.logger().info("Merging files");
     File mergedFile;
     if(sortedChunks.length < 2) {
       mergedFile = sortedChunks[0];
     } else {
-      mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, 0);
+      mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, comparator, 0);
     }
     Checks.checkSorted(mergedFile, 8, pl);
 
