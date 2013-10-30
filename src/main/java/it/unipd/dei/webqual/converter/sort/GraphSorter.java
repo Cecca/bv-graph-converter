@@ -1,9 +1,10 @@
 package it.unipd.dei.webqual.converter.sort;
 
-import it.unimi.dsi.big.webgraph.ImmutableGraph;
-import it.unimi.dsi.big.webgraph.LazyLongIterator;
-import it.unimi.dsi.big.webgraph.LazyLongIterators;
-import it.unimi.dsi.big.webgraph.NodeIterator;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
+import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unipd.dei.webqual.converter.FunctionFactory;
@@ -14,10 +15,8 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static it.unipd.dei.webqual.converter.Utils.reset;
 import static it.unipd.dei.webqual.converter.Utils.setHead;
@@ -124,6 +123,21 @@ public class GraphSorter {
 
     pl.logger().info("Merging files");
     File out = GraphMerger.mergeFiles(chunks, opts.outputFile, chunks.length, Long.SIZE/8, 0);
+
+    pl.start("==== Loading graph from " + opts.outputFile);
+    Function<byte[], Long> map =
+      FunctionFactory.buildIdentity(opts.outputFile.getName(), pl);
+    ImmutableGraph iag =
+      ImmutableAdjacencyGraph.loadOffline(opts.outputFile.getName(), 8, map, pl);
+    pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
+
+    String efOut = opts.outputFile + "-ef";
+    pl.start(
+      "==== Converting the graph to Elias-Fano format: output " + efOut);
+    EFGraph.store(iag, efOut, pl);
+    pl.stop("Conversion completed");
+
+    ImmutableGraph efGraph = EFGraph.loadOffline(efOut);
 
     pl.logger().info("All done");
   }

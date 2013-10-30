@@ -10,9 +10,9 @@ group = 'it.unipd.dei'
 //name = 'webqual-graph-converter'
 version = '0.1.0-SNAPSHOT'
 
-mainClassName = "it.unipd.dei.webqual.converter.Main"
+//mainClassName = "it.unipd.dei.webqual.converter.Main"
 //mainClassName = "it.unipd.dei.webqual.converter.merge.GraphMerger"
-//mainClassName = "it.unipd.dei.webqual.converter.sort.GraphSorter"
+mainClassName = "it.unipd.dei.webqual.converter.sort.GraphSorter"
 
 repositories {
   mavenCentral()
