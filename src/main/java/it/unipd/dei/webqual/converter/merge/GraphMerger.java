@@ -3,7 +3,9 @@ package it.unipd.dei.webqual.converter.merge;
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import it.unimi.dsi.logging.ProgressLogger;
 import it.unipd.dei.webqual.converter.AdjacencyHeadIterator;
+import it.unipd.dei.webqual.converter.Checks;
 import it.unipd.dei.webqual.converter.Utils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -184,22 +186,6 @@ public class GraphMerger {
     }
   }
 
-  private static void checkDuplicates(File f, int idLen) throws IOException {
-    ArrayComparator cmp = new ArrayComparator();
-    AdjacencyHeadIterator it =
-      new AdjacencyHeadIterator(f.getCanonicalPath(), idLen, true);
-    byte[] last = it.next();
-    while(it.hasNext()) {
-      byte[] cur = it.next();
-      if(cmp.compare(cur, last) == 0) {
-        throw new IllegalArgumentException(
-          "File " + f + " contains duplicates: \n\t"+Arrays.toString(last) +
-          "\n\t" + Arrays.toString(cur));
-      }
-      last = cur;
-    }
-  }
-
   public static void main(String[] args) throws IOException, InterruptedException {
 
     Options opts = new Options();
@@ -233,7 +219,7 @@ public class GraphMerger {
 
     if(!opts.noCheckDup) {
       log.info("Checking for duplicates in output");
-      checkDuplicates(outFile, opts.idLen);
+      Checks.checkDuplicates(outFile, opts.idLen, new ProgressLogger());
     }
 
     CsvReporter reporter = CsvReporter.forRegistry(metrics)
