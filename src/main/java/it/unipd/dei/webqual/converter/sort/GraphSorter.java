@@ -3,6 +3,7 @@ package it.unipd.dei.webqual.converter.sort;
 import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
+import it.unipd.dei.webqual.converter.Checks;
 import it.unipd.dei.webqual.converter.FunctionFactory;
 import it.unipd.dei.webqual.converter.ImmutableAdjacencyGraph;
 import it.unipd.dei.webqual.converter.merge.GraphMerger;
@@ -136,6 +137,8 @@ public class GraphSorter {
     pl.stop("Conversion completed");
 
     ImmutableGraph efGraph = EFGraph.loadOffline(efOut);
+
+    Checks.checkPositiveIDs(efGraph, pl);
 
     pl.logger().info("All done");
   }
