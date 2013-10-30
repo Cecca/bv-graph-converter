@@ -1,20 +1,58 @@
 package it.unipd.dei.webqual.converter;
 
-import it.unimi.dsi.bits.TransformationStrategy;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
-import it.unimi.dsi.sux4j.mph.*;
+import it.unimi.dsi.sux4j.mph.HollowTrieDistributorMonotoneMinimalPerfectHashFunction;
+import it.unimi.dsi.sux4j.mph.HollowTrieMonotoneMinimalPerfectHashFunction;
+import it.unimi.dsi.sux4j.mph.LcpMonotoneMinimalPerfectHashFunction;
+import it.unimi.dsi.sux4j.mph.MinimalPerfectHashFunction;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * Contains factory methods for various types of functions
  */
 public class FunctionFactory {
+
+  public static Function<byte[], Long> buildIdentity(String file, ProgressLogger pl) throws IOException {
+    AdjacencyHeads heads = new AdjacencyHeads(file, 8); // read longs
+    final long size = heads.getCount();
+
+    return new Function<byte[], Long>() {
+      @Override
+      public Long put(byte[] key, Long value) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public Long get(Object key) {
+        byte[] bytes = (byte[]) key;
+        return Utils.getLong(bytes);
+      }
+
+      @Override
+      public boolean containsKey(Object key) {
+        return false;
+      }
+
+      @Override
+      public Long remove(Object key) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public int size() {
+        return (int) size;
+      }
+
+      @Override
+      public void clear() {
+        //To change body of implemented methods use File | Settings | File Templates.
+      }
+    };
+  }
 
   public static MinimalPerfectHashFunction<byte[]> buildMphf( String file,
                                                               int idLen,

@@ -90,7 +90,7 @@ public class GraphMerger {
   }
 
   /**
-   * Asychronously merges files
+   * Asynchronously merges files
    * @param sortedFiles
    * @param outputName
    * @param groupBy
