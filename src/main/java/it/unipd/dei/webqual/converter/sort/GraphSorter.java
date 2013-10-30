@@ -138,7 +138,7 @@ public class GraphSorter {
 
     ImmutableGraph efGraph = EFGraph.loadOffline(efOut);
 
-    Checks.checkPositiveIDs(efGraph, pl);
+    Checks.checkPositiveIDs(iag, pl);
 
     pl.logger().info("All done");
   }
