@@ -4,6 +4,7 @@ import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unipd.dei.webqual.converter.Checks;
+import it.unipd.dei.webqual.converter.Conversions;
 import it.unipd.dei.webqual.converter.FunctionFactory;
 import it.unipd.dei.webqual.converter.ImmutableAdjacencyGraph;
 import it.unipd.dei.webqual.converter.merge.GraphMerger;
@@ -131,12 +132,8 @@ public class GraphSorter {
     pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
 
     String efOut = opts.outputFile + "-ef";
-    pl.start(
-      "==== Converting the graph to Elias-Fano format: output " + efOut);
-    EFGraph.store(iag, efOut, pl);
-    pl.stop("Conversion completed");
 
-    ImmutableGraph efGraph = EFGraph.loadOffline(efOut);
+    ImmutableGraph efGraph = Conversions.toEFGraph(iag, efOut, pl);
 
     Checks.checkPositiveIDs(iag, pl);
 
