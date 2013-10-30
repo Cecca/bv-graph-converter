@@ -45,10 +45,10 @@ public class Main {
 
     pl.logger().info("Merging files");
     File mergedFile;
-    if(sortedChunks.length == 1) {
-      mergedFile = chunks[0];
+    if(sortedChunks.length < 2) {
+      mergedFile = sortedChunks[0];
     } else {
-      mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, chunks.length, Long.SIZE / 8, 0);
+      mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, 0);
     }
 
     pl.start("==== Loading graph from " + mergedFile);
@@ -62,11 +62,13 @@ public class Main {
 
     ImmutableGraph efGraph = Conversions.toEFGraph(iag, efOut, pl);
 
+    Statistics.stats(efGraph, pl);
+
     Checks.checkPositiveIDs(iag, pl);
 
     pl.logger().info("All done");
 
-    Metrics.report();
+//    Metrics.report();
     Metrics.reset();
   }
 

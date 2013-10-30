@@ -41,6 +41,9 @@ public class GraphSplitter {
       i++;
     }
 
+    dos.close();
+    files.add(currentFile);
+
     pl.stop("Done splitting");
 
     return files.toArray(new File[files.size()]);

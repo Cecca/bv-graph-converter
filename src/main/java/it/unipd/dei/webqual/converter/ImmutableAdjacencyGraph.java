@@ -74,6 +74,11 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
     return loadOffline( basename, 16, FunctionFactory.buildMphf(new File(basename.toString()), 16, null), null );
   }
 
+  @Override
+  public CharSequence basename() {
+    return filename;
+  }
+
   public NodeIterator nodeIterator() {
     // increase count of iterators to keep measures unique across calls
     iteratorId++;
