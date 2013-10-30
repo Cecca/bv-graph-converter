@@ -1,7 +1,10 @@
 package it.unipd.dei.webqual.converter.merge;
 
 import com.codahale.metrics.Counter;
+import it.unipd.dei.webqual.converter.Metrics;
 import it.unipd.dei.webqual.converter.merge.GraphMerger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -14,7 +17,9 @@ import java.util.NoSuchElementException;
  */
 public class LazyMergeIterator<T> implements Iterator<T> {
 
-  private final Counter duplicateCounter = GraphMerger.metrics.counter("duplicates");
+  private final Logger logger = LoggerFactory.getLogger(LazyMergeIterator.class);
+
+  private final Counter duplicateCounter = Metrics.duplicatesCounter;
 
   private Iterator<T> first;
   private Iterator<T> second;

@@ -6,6 +6,7 @@ import com.codahale.metrics.Timer;
 import it.unimi.dsi.logging.ProgressLogger;
 import it.unipd.dei.webqual.converter.AdjacencyHeadIterator;
 import it.unipd.dei.webqual.converter.Checks;
+import it.unipd.dei.webqual.converter.Metrics;
 import it.unipd.dei.webqual.converter.Utils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -25,14 +26,12 @@ public class GraphMerger {
 
   private static final Logger log = LoggerFactory.getLogger(GraphMerger.class);
 
-  public static final MetricRegistry metrics = new MetricRegistry();
-
   private static final PairComparator PAIR_COMPARATOR = new PairComparator();
   private static final PairMerger PAIR_MERGER = new PairMerger();
 
   private static void sort(String inPath, String outPath, int idLen) throws IOException {
     log.info("Sorting {}", inPath);
-    Timer timer = metrics.timer("file-sorting");
+    Timer timer = Metrics.fileSortingTimer;
     Timer.Context context = timer.time();
     List<Pair> pairs = new LinkedList<>();
 
@@ -74,7 +73,7 @@ public class GraphMerger {
 
   private static File[] sortFiles(File[] inFiles, int idLen) throws IOException {
     log.info("============= Sorting files ===============");
-    Timer timer = metrics.timer("total-sorting");
+    Timer timer = Metrics.totalSortingTimer;
     Timer.Context context = timer.time();
     File[] sortedFiles = new File[inFiles.length];
     for(int i = 0; i<inFiles.length; i++) {
@@ -124,7 +123,7 @@ public class GraphMerger {
    * @param output
    */
   private static File mergeFiles(File[] sortedFiles, File output, int idLen) throws IOException {
-    Timer timer = metrics.timer("file-merging");
+    Timer timer = Metrics.fileMergingTimer;
     Timer.Context context = timer.time();
     LazyMergeIterator<Pair>[] iterators = new LazyMergeIterator[sortedFiles.length/2];
     for(int i=0; i<iterators.length; i++) {
@@ -170,26 +169,21 @@ public class GraphMerger {
     }
 
     log.info("============= Merging files ===============");
-    Timer timer = metrics.timer("total-merging");
+    Timer timer = Metrics.totalMergingTimer;
     Timer.Context context = timer.time();
     File outFile = mergeFiles(sortedFiles, new File(opts.outputName), opts.groupBy, opts.idLen, 0);
     long time = context.stop();
     log.info("====== Files merged, elapsed time: {} seconds", time/1000000000);
 
 
-    log.info("{} duplicates have been merged", metrics.counter("duplicates").getCount());
+    log.info("{} duplicates have been merged", Metrics.duplicatesCounter.getCount());
 
     if(!opts.noCheckDup) {
       Checks.checkDuplicates(outFile, opts.idLen, new ProgressLogger());
     }
 
-    CsvReporter reporter = CsvReporter.forRegistry(metrics)
-                                      .formatFor(Locale.ITALY)
-                                      .convertRatesTo(TimeUnit.SECONDS)
-                                      .convertDurationsTo(TimeUnit.SECONDS)
-                                      .build(new File("."));
-    reporter.report();
-    reporter.close();
+    Metrics.report();
+    Metrics.reset();
   }
 
   public static class Options {

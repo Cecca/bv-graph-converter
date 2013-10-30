@@ -1,22 +1,18 @@
 package it.unipd.dei.webqual.converter.sort;
 
+import com.codahale.metrics.CsvReporter;
 import it.unimi.dsi.big.webgraph.*;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
-import it.unipd.dei.webqual.converter.Checks;
-import it.unipd.dei.webqual.converter.Conversions;
-import it.unipd.dei.webqual.converter.FunctionFactory;
-import it.unipd.dei.webqual.converter.ImmutableAdjacencyGraph;
+import it.unipd.dei.webqual.converter.*;
 import it.unipd.dei.webqual.converter.merge.GraphMerger;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static it.unipd.dei.webqual.converter.Utils.reset;
 import static it.unipd.dei.webqual.converter.Utils.setHead;
@@ -55,20 +51,20 @@ public class GraphSorter {
     pl.start("Start splitting the graph in sorted chunks");
 
     long i = 1;
-    List<Pair> chunks = new ArrayList<>(numElems);
+    List<Pair> chunk = new ArrayList<>(numElems);
     while(it.hasNext()) {
       pl.update();
 
       long node = it.nextLong();
       long[][] neighs = it.successorBigArray();
       long outdeg = it.outdegree();
-      chunks.add(new Pair(node, neighs, outdeg));
+      chunk.add(new Pair(node, neighs, outdeg));
 
       if(i % numElems == 0 || ! it.hasNext()) {
-        Collections.sort(chunks);
-        File f = writeCollection(chunks, baseDir);
+        Collections.sort(chunk);
+        File f = writeCollection(chunk, baseDir);
         outputFiles.add(f);
-        chunks.clear();
+        chunk.clear();
       }
       i++;
     }
@@ -78,12 +74,12 @@ public class GraphSorter {
     return outputFiles.toArray(new File[outputFiles.size()]);
   }
 
-  private static File writeCollection(Collection<Pair> chunks, File baseDir) throws IOException {
+  private static File writeCollection(Collection<Pair> chunk, File baseDir) throws IOException {
     File out = File.createTempFile("chunk-", "", baseDir);
     pl.logger().info("Writing {}", out.getCanonicalPath());
     DataOutputStream dos =
       new DataOutputStream(new BufferedOutputStream(new FileOutputStream(out)));
-    for(Pair p : chunks) {
+    for(Pair p : chunk) {
       dos.writeLong(setHead(p.head));
       long i = p.outDegree;
       LazyLongIterator it = LazyLongIterators.wrap(p.succs);
@@ -138,6 +134,9 @@ public class GraphSorter {
     Checks.checkPositiveIDs(iag, pl);
 
     pl.logger().info("All done");
+
+    Metrics.report();
+    Metrics.reset();
   }
 
   private static void serialize(String name, Object o) throws IOException {

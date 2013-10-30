@@ -2,7 +2,6 @@ package it.unipd.dei.webqual.converter;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
 import it.unimi.dsi.big.webgraph.ImmutableGraph;
 import it.unimi.dsi.big.webgraph.ImmutableSequentialGraph;
 import it.unimi.dsi.big.webgraph.NodeIterator;
@@ -12,13 +11,10 @@ import it.unimi.dsi.logging.ProgressLogger;
 
 import java.io.*;
 import java.util.NoSuchElementException;
-import java.util.Random;
 
 import static it.unipd.dei.webqual.converter.Utils.isHead;
 
 public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
-
-  private final static MetricRegistry registry = new MetricRegistry();
 
   /** Used to keep measures with the registry unique across calls */
   private int iteratorId = -1;
@@ -84,8 +80,8 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
     try {
       return new NodeIterator() {
 
-        Counter missingItems = registry.counter(missingItemsCounterName(filename, iteratorId));
-        Histogram degreesDist = registry.histogram(degreeHistogramName(filename, iteratorId));
+        Counter missingItems = Metrics.missingItemsCounter(filename, iteratorId);
+        Histogram degreesDist = Metrics.degreeHistogram(filename, iteratorId);
 
         final DataInputStream dis = new DataInputStream(
           new BufferedInputStream(new FileInputStream(filename)));
@@ -173,15 +169,4 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
     }
   }
 
-  public static MetricRegistry getRegistry() {
-    return registry;
-  }
-
-  public static String missingItemsCounterName(String filename, int id) {
-    return "iag-"+filename+"-missing-items-"+id;
-  }
-
-  public static String degreeHistogramName(String filename, int id) {
-    return "iag-"+filename+"-degree-dist-"+id;
-  }
 }
