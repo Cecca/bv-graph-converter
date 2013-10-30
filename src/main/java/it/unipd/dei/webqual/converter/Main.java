@@ -34,10 +34,10 @@ public class Main {
 
     pl.logger().info("Building hash function");
     Function<byte[], Long> mapFunc =
-      FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
-//    String mphSerializedName = opts.inputGraph + "-mph";
-//    pl.logger().info("Storing hash function to {}", mphSerializedName);
-//    serialize(mphSerializedName, mapFunc);
+      FunctionFactory.buildMphf(opts.inputGraph, opts.idLen, pl);
+    String mphSerializedName = opts.inputGraph + "-mph";
+    pl.logger().info("Storing hash function to {}", mphSerializedName);
+    serialize(mphSerializedName, mapFunc);
 
     pl.logger().info("Loading graph from {}", opts.inputGraph);
     ImmutableGraph originalGraph =
@@ -65,11 +65,11 @@ public class Main {
       ImmutableAdjacencyGraph.loadOffline(mergedFile.getCanonicalPath(), 8, map, pl);
     pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
     final long convertedSize = iag.numNodes();
-    if(convertedSize != originalSize) {
-      throw new RuntimeException(
-        "Converted graph has size different than the original! Converted: "
-          +convertedSize+" Original: "+originalSize);
-    }
+//    if(convertedSize != originalSize) {
+//      throw new RuntimeException(
+//        "Converted graph has size different than the original! Converted: "
+//          +convertedSize+" Original: "+originalSize);
+//    }
     Checks.checkIncreasing(iag, pl);
 
 
