@@ -72,11 +72,6 @@ public class GraphMerger {
     out.close();
   }
 
-  private static void writePairs(File outPath, List<Pair> pairs)
-    throws IOException {
-    writeIterator(outPath, pairs.iterator());
-  }
-
   private static File[] sortFiles(File[] inFiles, int idLen) throws IOException {
     log.info("============= Sorting files ===============");
     Timer timer = metrics.timer("total-sorting");
@@ -91,16 +86,6 @@ public class GraphMerger {
     return sortedFiles;
   }
 
-  /**
-   * Asynchronously merges files
-   * @param sortedFiles
-   * @param outputName
-   * @param groupBy
-   * @param idLen
-   * @param recursionLevel
-   * @return
-   * @throws IOException
-   */
   public static File mergeFiles( final File[] sortedFiles,
                                           final File outputName,
                                           final int groupBy,
@@ -116,7 +101,6 @@ public class GraphMerger {
     }
 
     File[] tmpFiles = new File[sortedFiles.length / groupBy];
-    File[] tmpFutures = new File[tmpFiles.length];
 
     for(int i = 0; i < tmpFiles.length; i++) {
       tmpFiles[i] = File.createTempFile("graph-merger", "merging");
