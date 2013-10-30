@@ -1,16 +1,10 @@
 package it.unipd.dei.webqual.converter.sort;
 
-import it.unimi.dsi.big.webgraph.ImmutableGraph;
 import it.unimi.dsi.big.webgraph.LazyLongIterator;
 import it.unimi.dsi.big.webgraph.LazyLongIterators;
 import it.unimi.dsi.big.webgraph.NodeIterator;
-import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.logging.ProgressLogger;
-import it.unipd.dei.webqual.converter.*;
-import it.unipd.dei.webqual.converter.merge.GraphMerger;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
+import it.unipd.dei.webqual.converter.Checks;
 
 import java.io.*;
 import java.util.*;

@@ -110,48 +110,4 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
     }
   }
 
-  public static void main(String[] args) throws IOException {
-//    AdjacencyHeadIterator it = new AdjacencyHeadIterator(
-//      args[0], 16, false);
-//
-//    Map<BigInteger, List<BigInteger>> heads = new HashMap<>();
-//    long duplicates = 0;
-//    long diffNeighsDuplicates = 0;
-//    long edges = 0;
-//
-//    while(it.hasNext()) {
-//      byte[] head = it.next();
-//      BigInteger bi = new BigInteger(head);
-//      edges += it.neighbours().size();
-//      if(bi.signum() >= 0) {
-//        System.out.println("Head with first bit set to 0: " + bi.toString(16));
-//        System.out.println("The first byte is: " + head[0]);
-//        System.out.println("And isHead returns " + isHead(head));
-//        System.exit(1);
-//      }
-//      List<BigInteger> contained = heads.get(bi);
-//
-//      if(contained != null) {
-//        duplicates++;
-//
-//        Collections.sort(contained);
-//        Collections.sort(it.neighbours());
-//
-//        if(it.neighbours().equals(contained)) {
-//          diffNeighsDuplicates++;
-//        }
-//      } else {
-//        heads.put(bi, it.neighbours());
-//      }
-//    }
-//
-//    System.out.printf("%s  %d  %d  %f   %f\n",
-//      args[0],
-//      it.getCount(),
-//      edges,
-//      (((double) duplicates) / it.getCount()) * 100,
-//      (((double) diffNeighsDuplicates) / duplicates) * 100);
-
-  }
-
 }
