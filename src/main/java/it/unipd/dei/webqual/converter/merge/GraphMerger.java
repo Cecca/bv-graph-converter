@@ -29,7 +29,7 @@ public class GraphMerger {
   private static final PairComparator PAIR_COMPARATOR = new PairComparator();
   private static final PairMerger PAIR_MERGER = new PairMerger();
 
-  private static void sort(String inPath, String outPath, int idLen) throws IOException {
+  private static void sort(File inPath, File outPath, int idLen) throws IOException {
     log.info("Sorting {}", inPath);
     Timer timer = Metrics.fileSortingTimer;
     Timer.Context context = timer.time();
@@ -46,7 +46,7 @@ public class GraphMerger {
     // remove duplicates from the collection itself
     Iterator<Pair> deduplicated = removeLocalDuplicates(pairs);
 
-    writeIterator(new File(outPath), deduplicated);
+    writeIterator(outPath, deduplicated);
     long time = context.stop();
     log.info("{} sorted, elapsed time: {} seconds", inPath, time / 1000000000);
   }
@@ -78,7 +78,7 @@ public class GraphMerger {
     File[] sortedFiles = new File[inFiles.length];
     for(int i = 0; i<inFiles.length; i++) {
       sortedFiles[i] = File.createTempFile("graph-merger", "sorting"+inFiles[i].getName());
-      sort(inFiles[i].getCanonicalPath(), sortedFiles[i].getCanonicalPath(), idLen);
+      sort(inFiles[i], sortedFiles[i], idLen);
     }
     long time = context.stop();
     log.info("====== Files sorted, elapsed time: {} seconds", time / 1000000000);
@@ -129,12 +129,12 @@ public class GraphMerger {
     for(int i=0; i<iterators.length; i++) {
       if((2*i+1) < sortedFiles.length) {
         iterators[i] = new LazyMergeIterator<>(
-          new LazyFilePairIterator(sortedFiles[2*i].getCanonicalPath(), idLen),
-          new LazyFilePairIterator(sortedFiles[2*i+1].getCanonicalPath(), idLen),
+          new LazyFilePairIterator(sortedFiles[2*i], idLen),
+          new LazyFilePairIterator(sortedFiles[2*i+1], idLen),
           PAIR_COMPARATOR, PAIR_MERGER);
       } else {
         iterators[i] = new LazyMergeIterator<>(
-          new LazyFilePairIterator(sortedFiles[2*i].getCanonicalPath(), idLen),
+          new LazyFilePairIterator(sortedFiles[2*i], idLen),
           PAIR_COMPARATOR, PAIR_MERGER);
       }
     }

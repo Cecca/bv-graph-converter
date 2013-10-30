@@ -1,30 +1,31 @@
 package it.unipd.dei.webqual.converter;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
 public class AdjacencyHeads implements Iterable<byte[]> {
 
-  private final String fileName;
+  private final File file;
   private final int idLen;
   private final AdjacencyHeadIterator.ResetHeads reset;
 
   private AdjacencyHeadIterator firstIterator;
 
-  public AdjacencyHeads(String fileName, int idLen) throws IOException {
-    this(fileName, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
+  public AdjacencyHeads(File file, int idLen) throws IOException {
+    this(file, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
   }
 
-  public AdjacencyHeads(String fileName, int idLen, AdjacencyHeadIterator.ResetHeads reset) throws IOException {
-    this.fileName = fileName;
+  public AdjacencyHeads(File file, int idLen, AdjacencyHeadIterator.ResetHeads reset) throws IOException {
+    this.file = file;
     this.idLen = idLen;
     this.reset = reset;
 
     this.firstIterator = null;
   }
 
-  public String getFileName() {
-    return fileName;
+  public File getFile() {
+    return file;
   }
 
   public int getIdLen() {
@@ -35,7 +36,7 @@ public class AdjacencyHeads implements Iterable<byte[]> {
     // completely unwind first iterator
     if (firstIterator == null) {
       try {
-        firstIterator = new AdjacencyHeadIterator(fileName, idLen, reset);
+        firstIterator = new AdjacencyHeadIterator(file, idLen, reset);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -48,7 +49,7 @@ public class AdjacencyHeads implements Iterable<byte[]> {
   @Override
   public Iterator<byte[]> iterator() {
     try {
-      AdjacencyHeadIterator it = new AdjacencyHeadIterator(fileName, idLen, reset);
+      AdjacencyHeadIterator it = new AdjacencyHeadIterator(file, idLen, reset);
       if(firstIterator == null) {
         firstIterator = it;
       }
@@ -56,17 +57,6 @@ public class AdjacencyHeads implements Iterable<byte[]> {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public static void main(String[] args) throws IOException {
-    AdjacencyHeads hs = new AdjacencyHeads("links.0", 16);
-    long cnt = 0;
-    for(byte[] h : hs) {
-      cnt++;
-    }
-
-    assert(cnt == hs.getCount());
-    System.out.printf("Counted: %d\nComputed: %d", cnt, hs.getCount());
   }
 
 }

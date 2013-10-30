@@ -71,7 +71,7 @@ public class ImmutableAdjacencyGraph extends ImmutableSequentialGraph {
   }
 
   public static ImmutableGraph loadOffline( final CharSequence basename ) throws IOException {
-    return loadOffline( basename, 16, FunctionFactory.buildMphf(basename.toString(), 16, null), null );
+    return loadOffline( basename, 16, FunctionFactory.buildMphf(new File(basename.toString()), 16, null), null );
   }
 
   public NodeIterator nodeIterator() {

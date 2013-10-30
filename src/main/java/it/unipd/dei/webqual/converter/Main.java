@@ -36,7 +36,7 @@ public class Main {
 
     pl.logger().info("Loading graph from {}", opts.inputGraph);
     ImmutableGraph originalGraph =
-      ImmutableAdjacencyGraph.loadOffline(opts.inputGraph, opts.idLen, mapFunc, pl);
+      ImmutableAdjacencyGraph.loadOffline(opts.inputGraph.getCanonicalPath(), opts.idLen, mapFunc, pl);
 
     pl.logger().info("Sorting graph");
     File[] chunks = GraphSorter.splitSorted(originalGraph.nodeIterator(), opts.outputDir, opts.chunkSize);
@@ -51,7 +51,7 @@ public class Main {
 
     pl.start("==== Loading graph from " + mergedFile);
     Function<byte[], Long> map =
-      FunctionFactory.buildIdentity(mergedFile.getCanonicalPath(), pl);
+      FunctionFactory.buildIdentity(mergedFile, pl);
     ImmutableGraph iag =
       ImmutableAdjacencyGraph.loadOffline(mergedFile.getCanonicalPath(), 8, map, pl);
     pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
@@ -78,7 +78,7 @@ public class Main {
   public static class Options {
 
     @Option(name = "-i", metaVar = "FILE", required = true, usage = "the input graph")
-    public String inputGraph;
+    public File inputGraph;
 
     @Option(name = "--id-len", metaVar = "N", usage = "the input ID length, defaults to 16")
     public int idLen = 16;

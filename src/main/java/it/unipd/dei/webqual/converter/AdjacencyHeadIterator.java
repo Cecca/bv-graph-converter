@@ -1,7 +1,6 @@
 package it.unipd.dei.webqual.converter;
 
 import java.io.*;
-import java.math.BigInteger;
 import java.util.*;
 
 import static it.unipd.dei.webqual.converter.Utils.*;
@@ -10,7 +9,7 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
   public static enum ResetHeads { RESET, DONT_RESET }
 
-  private final String fileName;
+  private final File file;
   private final int idLen;
   private final ResetHeads reset;
   private final DataInputStream dis;
@@ -22,19 +21,19 @@ public class AdjacencyHeadIterator implements Iterator<byte[]> {
 
   private long count;
 
-  public AdjacencyHeadIterator(String fileName, int idLen, ResetHeads reset) throws IOException {
-    this.fileName = fileName;
+  public AdjacencyHeadIterator(File file, int idLen, ResetHeads reset) throws IOException {
+    this.file = file;
     this.idLen = idLen;
     this.reset = reset;
     this.dis = new DataInputStream(
-      new BufferedInputStream(new FileInputStream(this.fileName)));
+      new BufferedInputStream(new FileInputStream(this.file)));
 
     this.hasNext = true;
     byte[] firstNode = new byte[idLen];
     int read = dis.read(firstNode);
     if (read != idLen || !isHead(firstNode)) {
       throw new NoSuchElementException(
-        "The first id is not the head of an adjacency list: file " + fileName);
+        "The first id is not the head of an adjacency list: file " + file);
     }
     switch(reset){
       case RESET:

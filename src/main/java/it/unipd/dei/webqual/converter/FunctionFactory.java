@@ -7,6 +7,7 @@ import it.unimi.dsi.sux4j.mph.HollowTrieMonotoneMinimalPerfectHashFunction;
 import it.unimi.dsi.sux4j.mph.LcpMonotoneMinimalPerfectHashFunction;
 import it.unimi.dsi.sux4j.mph.MinimalPerfectHashFunction;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.List;
  */
 public class FunctionFactory {
 
-  public static Function<byte[], Long> buildIdentity(String file, ProgressLogger pl) throws IOException {
+  public static Function<byte[], Long> buildIdentity(File file, ProgressLogger pl) throws IOException {
     AdjacencyHeads heads = new AdjacencyHeads(file, 8); // read longs
     final long size = heads.getCount();
 
@@ -54,7 +55,7 @@ public class FunctionFactory {
     };
   }
 
-  public static MinimalPerfectHashFunction<byte[]> buildMphf( String file,
+  public static MinimalPerfectHashFunction<byte[]> buildMphf( File file,
                                                               int idLen,
                                                               ProgressLogger pl) throws IOException {
     if(pl != null)
@@ -77,7 +78,7 @@ public class FunctionFactory {
     return mph;
   }
 
-  public static HollowTrieMonotoneMinimalPerfectHashFunction<byte[]> buildHollowTrieMonotoneMph( String file,
+  public static HollowTrieMonotoneMinimalPerfectHashFunction<byte[]> buildHollowTrieMonotoneMph( File file,
                                                                                                  int idLen,
                                                                                                  ProgressLogger pl) throws IOException {
     if(pl != null)
@@ -100,7 +101,7 @@ public class FunctionFactory {
     return mph;
   }
 
-  public static HollowTrieDistributorMonotoneMinimalPerfectHashFunction<byte[]> buildHollowTrieDistributorMonotoneMph( String file,
+  public static HollowTrieDistributorMonotoneMinimalPerfectHashFunction<byte[]> buildHollowTrieDistributorMonotoneMph( File file,
                                                                                                  int idLen,
                                                                                                  ProgressLogger pl) throws IOException {
     if(pl != null)
@@ -123,7 +124,7 @@ public class FunctionFactory {
     return mph;
   }
 
-  public static LcpMonotoneMinimalPerfectHashFunction<byte[]> buildLcpMonotoneMph( String file,
+  public static LcpMonotoneMinimalPerfectHashFunction<byte[]> buildLcpMonotoneMph( File file,
                                                                                    int idLen,
                                                                                    ProgressLogger pl) throws IOException {
     if(pl != null)
@@ -146,7 +147,7 @@ public class FunctionFactory {
     return mph;
   }
 
-  public static ByteArray2LongFunction buildDeterministicMap( String file,
+  public static ByteArray2LongFunction buildDeterministicMap( File file,
                                                               int idLen,
                                                               ProgressLogger pl) throws IOException {
     if(pl != null)
@@ -173,33 +174,6 @@ public class FunctionFactory {
       pl.stop("Populated map with " +  map.size() +" elements");
 
     return map;
-  }
-
-  public static void main(String[] args) throws IOException {
-    Function<byte[], Long> map = buildDeterministicMap("merged", 16, new ProgressLogger());
-    AdjacencyHeadIterator it = new AdjacencyHeadIterator("merged", 16, AdjacencyHeadIterator.ResetHeads.RESET);
-
-    int errCnt = 0;
-    int totArcs = 0;
-    while(it.hasNext()) {
-      byte[] elem = it.next();
-      long id = map.get(elem);
-      if(id < 0)
-        throw new RuntimeException(Arrays.toString(elem) + " has no associated id");
-      List<byte[]> neighs = it.neighbours();
-      totArcs += neighs.size();
-      int neighCount = 0;
-      for(byte[] neigh : neighs) {
-        long nId = map.get(neigh);
-        if(nId < 0) {
-//          throw new RuntimeException("\n"+Arrays.toString(neigh) + ", neighbour " + neighCount + "/" + neighs.size() + " of\n" +
-//            Arrays.toString(elem) + " : " + id + " has no associated id");
-          errCnt++;
-        }
-        neighCount++;
-      }
-    }
-    System.out.println("Error count: " + errCnt + " over " + totArcs + " = " + ((double)errCnt/totArcs*100) + "%");
   }
 
 }

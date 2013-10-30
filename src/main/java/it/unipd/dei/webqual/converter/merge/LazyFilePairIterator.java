@@ -2,6 +2,7 @@ package it.unipd.dei.webqual.converter.merge;
 
 import it.unipd.dei.webqual.converter.AdjacencyHeadIterator;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -9,8 +10,8 @@ public class LazyFilePairIterator implements Iterator<Pair> {
 
   private AdjacencyHeadIterator innerIterator;
 
-  public LazyFilePairIterator(String fileName, int idLen) throws IOException {
-    this.innerIterator = new AdjacencyHeadIterator(fileName, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
+  public LazyFilePairIterator(File file, int idLen) throws IOException {
+    this.innerIterator = new AdjacencyHeadIterator(file, idLen, AdjacencyHeadIterator.ResetHeads.RESET);
   }
 
   @Override
