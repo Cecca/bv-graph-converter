@@ -34,7 +34,7 @@ public class Main {
 
     pl.logger().info("Building hash function");
     Function<byte[], Long> mapFunc =
-      FunctionFactory.buildMphf(opts.inputGraph, opts.idLen, pl);
+      FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
 //    String mphSerializedName = opts.inputGraph + "-mph";
 //    pl.logger().info("Storing hash function to {}", mphSerializedName);
 //    serialize(mphSerializedName, mapFunc);
@@ -111,7 +111,7 @@ public class Main {
     @Option(name = "-o", metaVar = "FILE", required = true, usage = "Output file")
     public File outputFile;
 
-    @Option(name = "-c", metaVar = "CHUNK_SIZE", usage = "Chunk size for intermediate sorted files. Defaults to 4096")
+    @Option(name = "-c", metaVar = "CHUNK_SIZE", usage = "Chunk size for intermediate sorted files. Defaults to 300'000")
     public int chunkSize = 300_000;
 
   }

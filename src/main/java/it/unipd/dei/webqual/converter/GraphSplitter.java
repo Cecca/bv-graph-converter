@@ -44,7 +44,10 @@ public class GraphSplitter {
     dos.close();
     files.add(currentFile);
 
-    pl.stop("Done splitting");
+    if(i-1 != graph.numNodes())
+      throw new RuntimeException("Wrote less nodes ("+(i-1)+") than the graph size ("+graph.numNodes()+")");
+
+    pl.stop("Done splitting of graph with "+graph.numNodes()+" nodes");
 
     return files.toArray(new File[files.size()]);
   }
