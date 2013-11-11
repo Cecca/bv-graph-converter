@@ -39,12 +39,12 @@ public class Main {
 //    pl.logger().info("Storing hash function to {}", mphSerializedName);
 //    serialize(mphSerializedName, mapFunc);
 
-    Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
+    if(opts.intermediateChecks)
+      Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
 
     pl.logger().info("Loading graph from {}", opts.inputGraph);
     ImmutableGraph originalGraph =
       ImmutableAdjacencyGraph.loadOffline(opts.inputGraph.getCanonicalPath(), opts.idLen, mapFunc, pl);
-    final long originalSize = originalGraph.numNodes();
 
     pl.logger().info("Sorting graph");
     File[] chunks = GraphSplitter.split(originalGraph, opts.outputDir, opts.chunkSize, pl);
@@ -58,8 +58,11 @@ public class Main {
     } else {
       mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, comparator, 0);
     }
-    Checks.checkSorted(mergedFile, 8, comparator, pl);
-    Checks.checkDuplicates(mergedFile, 8, pl);
+
+    if(opts.intermediateChecks) {
+      Checks.checkSorted(mergedFile, 8, comparator, pl);
+      Checks.checkDuplicates(mergedFile, 8, pl);
+    }
 
     pl.start("==== Loading graph from " + mergedFile);
     Function<byte[], Long> map =
@@ -67,22 +70,19 @@ public class Main {
     ImmutableGraph iag =
       ImmutableAdjacencyGraph.loadOffline(mergedFile.getCanonicalPath(), 8, map, pl);
     pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
-    final long convertedSize = iag.numNodes();
-//    if(convertedSize != originalSize) {
-//      throw new RuntimeException(
-//        "Converted graph has size different than the original! Converted: "
-//          +convertedSize+" Original: "+originalSize);
-//    }
-    Checks.checkIncreasing(iag, pl);
 
+    if (opts.intermediateChecks)
+      Checks.checkIncreasing(iag, pl);
 
     String efOut = opts.outputFile + "-ef";
 
     ImmutableGraph efGraph = Conversions.toBVGraph(iag, efOut, pl);
 
-    Checks.checkPositiveIDs(iag, pl);
+    if(opts.intermediateChecks)
+      Checks.checkPositiveIDs(iag, pl);
 
-    Checks.checkEquality(iag, efGraph, pl);
+    if(opts.intermediateChecks || opts.finalCheck)
+      Checks.checkEquality(iag, efGraph, pl);
 
     pl.logger().info("All done");
 
@@ -113,6 +113,12 @@ public class Main {
 
     @Option(name = "-c", metaVar = "CHUNK_SIZE", usage = "Chunk size for intermediate sorted files. Defaults to 300'000")
     public int chunkSize = 300_000;
+
+    @Option(name = "--checks", usage = "Perform intermediate checks")
+    public boolean intermediateChecks = false;
+
+    @Option(name = "--final-check", usage = "Perform final equality checks")
+    public boolean finalCheck = false;
 
   }
 
