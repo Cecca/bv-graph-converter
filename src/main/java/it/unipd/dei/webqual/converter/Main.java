@@ -32,24 +32,30 @@ public class Main {
     ProgressLogger pl = new ProgressLogger();
     pl.displayFreeMemory = true;
 
-    pl.logger().info("Building hash function");
-    Function<byte[], Long> mapFunc =
-      FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
-//    String mphSerializedName = opts.inputGraph + "-mph";
-//    pl.logger().info("Storing hash function to {}", mphSerializedName);
-//    serialize(mphSerializedName, mapFunc);
+    File[] sortedChunks;
+    if(opts.skipSplitting){
 
-    if(opts.intermediateChecks)
-      Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
+      pl.logger().info("Building hash function");
+      Function<byte[], Long> mapFunc =
+        FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
+  //    String mphSerializedName = opts.inputGraph + "-mph";
+  //    pl.logger().info("Storing hash function to {}", mphSerializedName);
+  //    serialize(mphSerializedName, mapFunc);
 
-    pl.logger().info("Loading graph from {}", opts.inputGraph);
-    ImmutableGraph originalGraph =
-      ImmutableAdjacencyGraph.loadOffline(opts.inputGraph.getCanonicalPath(), opts.idLen, mapFunc, pl);
+      if(opts.intermediateChecks)
+        Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
 
-    pl.logger().info("Sorting graph");
-    File[] chunks = GraphSplitter.split(originalGraph, opts.outputDir, opts.chunkSize, pl);
+      pl.logger().info("Loading graph from {}", opts.inputGraph);
+      ImmutableGraph originalGraph =
+        ImmutableAdjacencyGraph.loadOffline(opts.inputGraph.getCanonicalPath(), opts.idLen, mapFunc, pl);
 
-    File[] sortedChunks = GraphMerger.sortFiles(chunks, 8, comparator);
+      pl.logger().info("Sorting graph");
+      File[] chunks = GraphSplitter.split(originalGraph, opts.outputDir, opts.chunkSize, pl);
+
+      sortedChunks = GraphMerger.sortFiles(chunks, 8, comparator);
+    } else {
+      sortedChunks = opts.outputDir.listFiles();
+    }
 
     pl.logger().info("Merging files");
     File mergedFile;
@@ -119,6 +125,9 @@ public class Main {
 
     @Option(name = "--final-check", usage = "Perform final equality checks")
     public boolean finalCheck = false;
+
+    @Option(name = "--skip-splitting", usage = "Skips the splitting phase")
+    public boolean skipSplitting = false;
 
   }
 
