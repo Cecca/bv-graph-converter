@@ -33,7 +33,7 @@ public class Main {
     pl.displayFreeMemory = true;
 
     File[] sortedChunks;
-    if(opts.skipSplitting){
+    if(!opts.skipSplitting){
 
       pl.logger().info("Building hash function");
       Function<byte[], Long> mapFunc =
