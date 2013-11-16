@@ -41,7 +41,7 @@ public class Main {
     //    pl.logger().info("Storing hash function to {}", mphSerializedName);
     //    serialize(mphSerializedName, mapFunc);
 
-    if(opts.intermediateChecks)
+    if(opts.checkMap)
       Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
 
     pl.logger().info("Loading graph from {}", opts.inputGraph);
@@ -61,7 +61,7 @@ public class Main {
       } else {
         mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, comparator, 0);
       }
-      if(opts.intermediateChecks) {
+      if(opts.checkSortedDuplicates) {
         Checks.checkSorted(mergedFile, 8, comparator, pl);
         Checks.checkDuplicates(mergedFile, 8, pl);
       }
@@ -78,17 +78,17 @@ public class Main {
     }
 
 
-    if (opts.intermediateChecks)
+    if (opts.checkIncreasing)
       Checks.checkIncreasing(iag, pl);
 
     String efOut = opts.outputFile + "-ef";
 
     ImmutableGraph efGraph = Conversions.toBVGraph(iag, efOut, pl);
 
-    if(opts.intermediateChecks)
+    if(opts.checkPositiveIDs)
       Checks.checkPositiveIDs(iag, pl);
 
-    if(opts.intermediateChecks || opts.finalCheck)
+    if(opts.finalCheck)
       Checks.checkEquality(iag, efGraph, pl);
 
     pl.logger().info("All done");
@@ -121,15 +121,23 @@ public class Main {
     @Option(name = "-c", metaVar = "CHUNK_SIZE", usage = "Chunk size for intermediate sorted files. Defaults to 300'000")
     public int chunkSize = 300_000;
 
-    @Option(name = "--checks", usage = "Perform intermediate checks")
-    public boolean intermediateChecks = false;
-
     @Option(name = "--final-check", usage = "Perform final equality checks")
     public boolean finalCheck = false;
 
     @Option(name = "--skip-sorting", usage = "Skips the sorting phase")
     public boolean skipSorting = false;
 
+    @Option(name = "--check-map")
+    public boolean checkMap = false;
+
+    @Option(name = "--check-sorted-duplicates")
+    public boolean checkSortedDuplicates = false;
+
+    @Option(name = "--check-increasing")
+    public boolean checkIncreasing = false;
+
+    @Option(name = "--check-positive-ids")
+    public boolean checkPositiveIDs = false;
   }
 
 }
