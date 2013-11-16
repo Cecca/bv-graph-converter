@@ -33,49 +33,50 @@ public class Main {
     pl.displayFreeMemory = true;
 
     File[] sortedChunks;
-    if(!opts.skipSplitting){
 
-      pl.logger().info("Building hash function");
-      Function<byte[], Long> mapFunc =
-        FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
-  //    String mphSerializedName = opts.inputGraph + "-mph";
-  //    pl.logger().info("Storing hash function to {}", mphSerializedName);
-  //    serialize(mphSerializedName, mapFunc);
+    pl.logger().info("Building hash function");
+    Function<byte[], Long> mapFunc =
+      FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
+    //    String mphSerializedName = opts.inputGraph + "-mph";
+    //    pl.logger().info("Storing hash function to {}", mphSerializedName);
+    //    serialize(mphSerializedName, mapFunc);
 
-      if(opts.intermediateChecks)
-        Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
+    if(opts.intermediateChecks)
+      Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
 
-      pl.logger().info("Loading graph from {}", opts.inputGraph);
-      ImmutableGraph originalGraph =
-        ImmutableAdjacencyGraph.loadOffline(opts.inputGraph.getCanonicalPath(), opts.idLen, mapFunc, pl);
+    pl.logger().info("Loading graph from {}", opts.inputGraph);
+    ImmutableGraph originalGraph =
+      ImmutableAdjacencyGraph.loadOffline(opts.inputGraph.getCanonicalPath(), opts.idLen, mapFunc, pl);
 
+    ImmutableGraph iag = null;
+
+    if(!opts.skipSorting){
       pl.logger().info("Sorting graph");
       File[] chunks = GraphSplitter.split(originalGraph, opts.outputDir, opts.chunkSize, pl);
-
       sortedChunks = GraphMerger.sortFiles(chunks, 8, comparator);
+      pl.logger().info("Merging files");
+      File mergedFile;
+      if(sortedChunks.length < 2) {
+        mergedFile = sortedChunks[0];
+      } else {
+        mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, comparator, 0);
+      }
+      if(opts.intermediateChecks) {
+        Checks.checkSorted(mergedFile, 8, comparator, pl);
+        Checks.checkDuplicates(mergedFile, 8, pl);
+      }
+
+      pl.start("==== Loading graph from " + mergedFile);
+      Function<byte[], Long> map =
+        FunctionFactory.buildIdentity(mergedFile, pl);
+      iag = ImmutableAdjacencyGraph.loadOffline(mergedFile.getCanonicalPath(), 8, map, pl);
+      pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
+
     } else {
-      sortedChunks = opts.outputDir.listFiles();
+      iag = originalGraph;
+      pl.logger().info("Loaded graph with " + iag.numNodes() + " nodes");
     }
 
-    pl.logger().info("Merging files");
-    File mergedFile;
-    if(sortedChunks.length < 2) {
-      mergedFile = sortedChunks[0];
-    } else {
-      mergedFile = GraphMerger.mergeFiles(sortedChunks, opts.outputFile, sortedChunks.length, 8, comparator, 0);
-    }
-
-    if(opts.intermediateChecks) {
-      Checks.checkSorted(mergedFile, 8, comparator, pl);
-      Checks.checkDuplicates(mergedFile, 8, pl);
-    }
-
-    pl.start("==== Loading graph from " + mergedFile);
-    Function<byte[], Long> map =
-      FunctionFactory.buildIdentity(mergedFile, pl);
-    ImmutableGraph iag =
-      ImmutableAdjacencyGraph.loadOffline(mergedFile.getCanonicalPath(), 8, map, pl);
-    pl.stop("Loaded graph with " + iag.numNodes() + " nodes");
 
     if (opts.intermediateChecks)
       Checks.checkIncreasing(iag, pl);
@@ -126,8 +127,8 @@ public class Main {
     @Option(name = "--final-check", usage = "Perform final equality checks")
     public boolean finalCheck = false;
 
-    @Option(name = "--skip-splitting", usage = "Skips the splitting phase")
-    public boolean skipSplitting = false;
+    @Option(name = "--skip-sorting", usage = "Skips the sorting phase")
+    public boolean skipSorting = false;
 
   }
 
