@@ -37,9 +37,12 @@ public class Main {
     pl.logger().info("Building hash function");
     Function<byte[], Long> mapFunc =
       FunctionFactory.buildDeterministicMap(opts.inputGraph, opts.idLen, pl);
-    //    String mphSerializedName = opts.inputGraph + "-mph";
-    //    pl.logger().info("Storing hash function to {}", mphSerializedName);
-    //    serialize(mphSerializedName, mapFunc);
+
+    if(opts.serializeMap) {
+      String mphSerializedName = opts.inputGraph + "-mph";
+      pl.logger().info("Storing hash function to {}", mphSerializedName);
+      serialize(mphSerializedName, mapFunc);
+    }
 
     if(opts.checkMap)
       Checks.checkMap(opts.inputGraph, opts.idLen, mapFunc, pl);
@@ -120,6 +123,9 @@ public class Main {
 
     @Option(name = "-c", metaVar = "CHUNK_SIZE", usage = "Chunk size for intermediate sorted files. Defaults to 300'000")
     public int chunkSize = 300_000;
+
+    @Option(name = "--serialize-map")
+    public boolean serializeMap = false;
 
     @Option(name = "--final-check", usage = "Perform final equality checks")
     public boolean finalCheck = false;
