@@ -9,7 +9,7 @@ apply plugin: 'maven-publish'
 group = 'it.unipd.dei'
 version = '0.2.0-SNAPSHOT'
 
-mainClassName = "it.unipd.dei.webqual.converter.Main"
+mainClassName = "it.unipd.dei.webqual.converter.MapWriter"
 
 repositories {
   mavenCentral()
